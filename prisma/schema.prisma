@@ -46,6 +46,16 @@ model Project {
   // "registrado" -> alta definitiva, ya se generó folio+PDF+correo
   recordStatus String @default("borrador")
 
+  // Estatus general de avance (independiente de recordStatus):
+  // "en_proceso" | "entregado". Se marca "entregado" automáticamente cuando
+  // se completa el punto principal "entregado" (ver Fase 4).
+  status      String    @default("en_proceso")
+  deliveredAt DateTime?
+
+  // Breve descripción del trabajo (para identificarlo en listados,
+  // ej. "Molde para tapa de envase 500ml")
+  title String
+
   // Datos del cliente
   clientName String
   company    String?

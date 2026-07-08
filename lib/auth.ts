@@ -2,9 +2,17 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { z } from 'zod'
 
 const MAX_INTENTOS = 5
 const BLOQUEO_MINUTOS = 15
+
+// Toda entrada de usuario se valida en el servidor con Zod, nunca se confía
+// solo en la validación del formulario del cliente.
+const credentialsSchema = z.object({
+    email: z.string().trim().toLowerCase().email(),
+    password: z.string().min(1).max(200),
+})
 
 async function registrarAuditoria(
     userId: string | null,
@@ -29,9 +37,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null
+                const parsed = credentialsSchema.safeParse(credentials)
+                if (!parsed.success) return null
 
-                const email = (credentials.email as string).trim().toLowerCase()
+                const { email, password } = parsed.data
 
                 const user = await prisma.user.findUnique({ where: { email } })
 
@@ -48,10 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null
                 }
 
-                const passwordMatch = await bcrypt.compare(
-                    credentials.password as string,
-                    user.password
-                )
+                const passwordMatch = await bcrypt.compare(password, user.password)
 
                 if (!passwordMatch) {
                     const intentos = user.failedLoginAttempts + 1
@@ -99,6 +105,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     pages: {
         signIn: '/login',
     },
+    // Cookies reforzadas: httpOnly (no accesible por JS/XSS), sameSite=lax
+    // (evita que la sesión viaje en requests cross-site) y secure en producción.
+    cookies: {
+        sessionToken: {
+            name:
+                process.env.NODE_ENV === 'production'
+                    ? '__Secure-authjs.session-token'
+                    : 'authjs.session-token',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+    },
+    trustHost: true,
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
