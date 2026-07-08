@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { checkRateLimit, loginRateLimiter } from '@/lib/ratelimit'
 
 const MAX_INTENTOS = 5
 const BLOQUEO_MINUTOS = 15
@@ -36,7 +37,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
-            async authorize(credentials) {
+            async authorize(credentials, request) {
+                // Throttle por IP además del bloqueo por cuenta de abajo: esto
+                // frena el credential-stuffing (probar muchas cuentas distintas
+                // desde la misma IP), cosa que el bloqueo por cuenta no cubre.
+                // Si no hay Upstash configurado (dev), checkRateLimit no bloquea.
+                const ip =
+                    request?.headers?.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+                const { success } = await checkRateLimit(loginRateLimiter, ip)
+                if (!success) {
+                    await registrarAuditoria(null, 'login_rate_limited', { ip })
+                    return null
+                }
+
                 const parsed = credentialsSchema.safeParse(credentials)
                 if (!parsed.success) return null
 

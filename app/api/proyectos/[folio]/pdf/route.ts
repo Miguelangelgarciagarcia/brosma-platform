@@ -10,6 +10,11 @@ export async function GET(
     try {
         const session = await auth()
         if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        // La orden de trabajo trae datos financieros y firmas del cliente:
+        // solo Admin puede descargarla, no cualquier trabajador con sesión.
+        if (session.user?.role !== 'admin') {
+            return NextResponse.json({ error: 'No tienes permisos' }, { status: 403 })
+        }
 
         const { folio } = await params
         const project = await prisma.project.findUnique({ where: { folio }, select: { id: true } })
