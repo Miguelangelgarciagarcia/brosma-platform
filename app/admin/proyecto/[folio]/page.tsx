@@ -3,13 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
-import { labelDePunto } from '@/lib/main-points'
+import { esPuntoSoloEstatus } from '@/lib/main-points'
+import MarcarEstatusButton from '@/components/admin/MarcarEstatusButton'
 
 type PhaseWithResp = {
     id: string
     parentId: string | null
     depth: number
     order: number
+    mainPointKey: string | null
     title: string
     description: string | null
     status: string
@@ -80,6 +82,9 @@ function PhaseNode({ node, label }: { node: any; label: string }) {
                 </div>
                 {node.description && (
                     <div style={{ fontSize: '12px', color: 'var(--fg2)', marginTop: '6px' }}>{node.description}</div>
+                )}
+                {node.depth === 0 && esPuntoSoloEstatus(node.mainPointKey) && node.status !== 'completado' && (
+                    <MarcarEstatusButton phaseId={node.id} />
                 )}
             </div>
             {node.children.map((child: any, i: number) => (
