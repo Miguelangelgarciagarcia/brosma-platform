@@ -175,6 +175,10 @@ export default function NuevoProyectoPage() {
             const json = await res.json()
             if (!res.ok) throw new Error(json.error || 'Error al guardar')
 
+            if (json.emailError) {
+                alert(json.emailError)
+            }
+
             router.push('/admin')
             router.refresh()
         } catch (err: any) {

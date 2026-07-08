@@ -6,6 +6,8 @@ import { crearArbolFases } from '@/lib/phase-tree'
 import { generarFolioUnico } from '@/lib/folio'
 import { calcularFechaEntregaSugerida } from '@/lib/business-days'
 import { esPuntoSoloEstatus } from '@/lib/main-points'
+import { generarOrdenTrabajoPDF } from '@/lib/pdf/generar-orden'
+import { resend } from '@/lib/resend'
 
 export async function POST(req: Request) {
     try {
@@ -108,10 +110,51 @@ export async function POST(req: Request) {
             },
         })
 
-        // TODO (siguiente paso): si recordStatus === 'registrado' y hay email,
-        // generar PDF y enviarlo por Resend.
+        // Si se registra de forma definitiva y el cliente dejó correo,
+        // generamos el PDF y se lo mandamos por Resend. Un fallo aquí NO debe
+        // tumbar el registro (el proyecto ya se guardó bien); solo avisamos.
+        let emailEnviado = false
+        let emailError: string | null = null
 
-        return NextResponse.json({ folio: project.folio }, { status: 201 })
+        if (data.recordStatus === 'registrado' && project.email) {
+            try {
+                const pdfBuffer = await generarOrdenTrabajoPDF(project.id)
+                await resend.emails.send({
+                    from: process.env.RESEND_FROM!,
+                    to: project.email,
+                    subject: `Brosma - Orden de trabajo ${folio}`,
+                    html: `
+                        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+                            <h2 style="color: #000;">Hola ${project.clientName} 👋</h2>
+                            <p>Gracias por confiar en <strong>Brosma</strong>. Hemos registrado tu proyecto "${project.title}" correctamente.</p>
+                            <div style="background: #f9f9f9; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                                <p style="margin: 0 0 4px; color: #666; font-size: 12px;">FOLIO DE SEGUIMIENTO</p>
+                                <p style="margin: 0; font-size: 20px; font-weight: bold; font-family: monospace;">${folio}</p>
+                            </div>
+                            <p>Adjunto encontrarás tu orden de trabajo con los detalles del proyecto.</p>
+                            <p style="color: #666; font-size: 12px; margin-top: 24px;">
+                                Brosma · Este es un mensaje automático, por favor no respondas a este correo.
+                            </p>
+                        </div>
+                    `,
+                    attachments: [
+                        {
+                            filename: `orden-${folio}.pdf`,
+                            content: pdfBuffer,
+                        },
+                    ],
+                })
+                emailEnviado = true
+            } catch (err) {
+                console.error('Error enviando correo de registro:', err)
+                emailError = 'El proyecto se registró bien, pero no se pudo enviar el correo al cliente.'
+            }
+        }
+
+        return NextResponse.json(
+            { folio: project.folio, emailEnviado, emailError },
+            { status: 201 }
+        )
     } catch (error) {
         console.error(error)
         return NextResponse.json({ error: 'Error al registrar el proyecto' }, { status: 500 })

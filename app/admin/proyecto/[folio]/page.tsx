@@ -129,14 +129,32 @@ export default async function ProyectoDetallePage({
             </div>
 
             <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--accent-hover)' }}>{project.folio}</div>
-                    <h1 style={{ fontSize: '20px', fontWeight: 700, margin: '4px 0' }}>{project.title}</h1>
-                    <div style={{ fontSize: '13px', color: 'var(--fg2)' }}>
-                        {project.clientName}
-                        {project.company ? ` · ${project.company}` : ''} · {project.phone}
-                        {project.email ? ` · ${project.email}` : ''}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--accent-hover)' }}>{project.folio}</div>
+                        <h1 style={{ fontSize: '20px', fontWeight: 700, margin: '4px 0' }}>{project.title}</h1>
+                        <div style={{ fontSize: '13px', color: 'var(--fg2)' }}>
+                            {project.clientName}
+                            {project.company ? ` · ${project.company}` : ''} · {project.phone}
+                            {project.email ? ` · ${project.email}` : ''}
+                        </div>
                     </div>
+                    <a
+                        href={`/api/proyectos/${project.folio}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            fontSize: '12px',
+                            color: 'var(--accent-hover)',
+                            border: '1px solid var(--border-default)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '8px 14px',
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        Ver PDF
+                    </a>
                 </div>
 
                 <div
