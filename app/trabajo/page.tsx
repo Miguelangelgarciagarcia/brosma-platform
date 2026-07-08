@@ -1,6 +1,7 @@
 import { auth, signOut } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import FaseCard from '@/components/trabajo/FaseCard'
 
 export default async function TrabajoPage() {
@@ -33,6 +34,9 @@ export default async function TrabajoPage() {
                 <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--fg2)' }}>{session.user?.name}</span>
+                    <Link href="/cuenta" style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                        Mi cuenta
+                    </Link>
                     <form
                         action={async () => {
                             'use server'

@@ -8,6 +8,7 @@ const links = [
     { href: '/admin/nuevo', label: 'Registrar' },
     { href: '/admin/historial', label: 'Historial' },
     { href: '/admin/configuracion', label: 'Configuración' },
+    { href: '/cuenta', label: 'Mi cuenta' },
 ]
 
 export default function AdminNav() {

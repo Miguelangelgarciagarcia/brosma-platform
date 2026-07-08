@@ -10,8 +10,9 @@ export default auth((req) => {
 
     const isAdminRoute = path.startsWith('/admin')
     const isTrabajoRoute = path.startsWith('/trabajo')
+    const isCuentaRoute = path.startsWith('/cuenta')
 
-    if ((isAdminRoute || isTrabajoRoute) && !isLoggedIn) {
+    if ((isAdminRoute || isTrabajoRoute || isCuentaRoute) && !isLoggedIn) {
         return NextResponse.redirect(new URL('/login', req.url))
     }
 
@@ -24,5 +25,5 @@ export default auth((req) => {
 })
 
 export const config = {
-    matcher: ['/admin/:path*', '/trabajo/:path*'],
+    matcher: ['/admin/:path*', '/trabajo/:path*', '/cuenta/:path*'],
 }
