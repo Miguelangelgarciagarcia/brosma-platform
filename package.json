@@ -1,0 +1,46 @@
+{
+  "name": "brosma-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "dotenv -e .env.local -- npx prisma db push",
+    "db:studio": "dotenv -e .env.local -- npx prisma studio",
+    "db:generate": "npx prisma generate",
+    "db:seed": "dotenv -e .env.local -- npx tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@react-pdf/renderer": "^4.5.1",
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.35.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "next": "16.2.6",
+    "next-auth": "^5.0.0-beta.31",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "resend": "^6.12.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-signature-canvas": "^1.0.7",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}

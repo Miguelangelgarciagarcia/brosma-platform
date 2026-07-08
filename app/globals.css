@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+/* ================================================================
+   Brosma - Design tokens (mínimo, sin marketing por ahora)
+   ================================================================ */
+:root {
+  --bg: #0b0d10;
+  --bg-elev: #14171b;
+  --bg-card: #181c21;
+  --bg-input: #1f242b;
+  --fg1: #f5f6f7;
+  --fg2: #a9b0b8;
+  --fg3: #6b7280;
+  --accent: #2f6fed;       /* azul industrial, provisional */
+  --accent-hover: #4c86ff;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --font-body: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}

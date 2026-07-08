@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Conexión directa (sin pooler) para migraciones, recomendado por Neon.
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios internos (Admin / Trabajador)
+// ---------------------------------------------------------------------------
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String // hash bcrypt, nunca texto plano
+
+  role String @default("trabajador") // "admin" | "trabajador"
+
+  // Endurecimiento contra fuerza bruta en login
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proyectosCreados Project[]      @relation("ProyectosCreadosPor")
+  fasesResponsable Phase[]        @relation("FaseResponsable")
+  historialCambios StatusHistory[] @relation("HistorialCambiadoPor")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Proyecto / Pedido del cliente
+// ---------------------------------------------------------------------------
+model Project {
+  id    String @id @default(cuid())
+  folio String @unique
+
+  // "borrador"  -> guardado para seguir editando, aún no notifica al cliente
+  // "registrado" -> alta definitiva, ya se generó folio+PDF+correo
+  recordStatus String @default("borrador")
+
+  // Datos del cliente
+  clientName String
+  company    String?
+  phone      String
+  email      String?
+
+  // Datos financieros
+  cost           Float?
+  advancePayment Float? @default(0)
+  paymentStatus  String @default("pendiente") // "pendiente" | "anticipo" | "pagado"
+
+  notes String?
+
+  // Firmas (dataURL / imagen subida)
+  clientSignature   String?
+  receiverSignature String?
+
+  // Fechas de entrega
+  estimatedDeliveryAuto   DateTime? // sugerida por el sistema (suma de días hábiles)
+  estimatedDeliveryManual DateTime? // ajustada a mano por el Admin (si existe, esta manda)
+
+  // Visibilidad para el cliente: ¿puede ver el primer nivel de subpuntos (1.1, 1.2...)?
+  clientCanSeeSubpoints Boolean @default(false)
+
+  createdById String
+  createdBy   User   @relation("ProyectosCreadosPor", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  phases        Phase[]
+  statusHistory StatusHistory[]
+
+  @@map("projects")
+}
+
+// ---------------------------------------------------------------------------
+// Fase / Punto (árbol autorreferencial de profundidad infinita)
+// depth 0  = Punto Principal (los 6 hitos fijos, siempre visibles al cliente)
+// depth 1  = Subpunto (visible al cliente solo si Project.clientCanSeeSubpoints)
+// depth 2+ = Sub-subpunto (nunca visible al cliente, solo uso interno)
+// ---------------------------------------------------------------------------
+model Phase {
+  id        String @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Phase?  @relation("PhaseTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Phase[] @relation("PhaseTree")
+
+  depth Int // 0, 1, 2, 3...
+  order Int @default(0) // orden entre hermanos
+
+  // Solo se usa en los puntos principales (depth 0) para identificar
+  // cuál de los 6 hitos fijos es: planeacion | inicio_proyecto | pruebas | calidad | listo_entrega | entregado
+  mainPointKey String?
+
+  title       String // título corto
+  description String? // descripción larga (uso interno)
+
+  responsibleId String
+  responsible   User   @relation("FaseResponsable", fields: [responsibleId], references: [id])
+
+  status String @default("pendiente") // "pendiente" | "en_proceso" | "completado"
+
+  estimatedDays Int? // solo relevante en depth 0, para calcular la fecha de entrega
+  startDate     DateTime?
+  endDate       DateTime?
+  completedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([responsibleId])
+  @@map("phases")
+}
+
+// ---------------------------------------------------------------------------
+// Historial de estatus (auditoría visible en seguimiento + interno)
+// ---------------------------------------------------------------------------
+model StatusHistory {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  phaseId String? // null = evento a nivel proyecto (ej. cambio de fecha de entrega)
+
+  status String
+  note   String?
+
+  changedById String?
+  changedBy   User?   @relation("HistorialCambiadoPor", fields: [changedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@map("status_history")
+}
+
+// ---------------------------------------------------------------------------
+// Bitácora de seguridad (acciones sensibles: logins, altas de usuario, etc.)
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action     String // ej. "login_success", "login_failed", "user_created", "password_changed"
+  targetType String? // ej. "Project", "User", "Phase"
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
+}
