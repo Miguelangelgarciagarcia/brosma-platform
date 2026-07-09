@@ -22,7 +22,10 @@ async function registrarAuditoria(
 ) {
     try {
         await prisma.auditLog.create({
-            data: { userId, action, metadata },
+            // Prisma tipa el JSON de forma estricta (InputJsonValue); metadata
+            // aquí siempre es un objeto plano serializable, se castea nada más
+            // para el tipado.
+            data: { userId, action, metadata: metadata as any },
         })
     } catch {
         // La auditoría nunca debe tumbar el login; si falla, solo se ignora.

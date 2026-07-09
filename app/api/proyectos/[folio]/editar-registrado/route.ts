@@ -2,19 +2,37 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { createProjectSchema } from '@/lib/validations/project'
-import { crearArbolFases } from '@/lib/phase-tree'
-import { generarFolioUnico } from '@/lib/folio'
+import { actualizarArbolFasesPreservandoProgreso } from '@/lib/phase-tree'
 import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
 import { esPuntoSoloEstatus, rellenarResponsablesFaltantes } from '@/lib/main-points'
-import { generarOrdenTrabajoPDF } from '@/lib/pdf/generar-orden'
 import { resend } from '@/lib/resend'
 
-export async function POST(req: Request) {
+// Edición de un proyecto YA REGISTRADO. A propósito es una ruta separada de
+// la de borrador (app/api/proyectos/[folio]/route.ts): aquí NUNCA se borra
+// y recrea el árbol de fases (se perdería el progreso que ya marcaron los
+// trabajadores), y se puede avisar al cliente por correo si cambió algo
+// sensible (fecha de entrega o datos de pago).
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ folio: string }> }
+) {
     try {
         const session = await auth()
         if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
         if (session.user?.role !== 'admin') {
-            return NextResponse.json({ error: 'Solo un Administrador puede registrar proyectos' }, { status: 403 })
+            return NextResponse.json({ error: 'Solo un Administrador puede editar proyectos' }, { status: 403 })
+        }
+
+        const { folio } = await params
+
+        const existente = await prisma.project.findUnique({ where: { folio } })
+        if (!existente) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+
+        if (existente.recordStatus !== 'registrado') {
+            return NextResponse.json(
+                { error: 'Este proyecto sigue como borrador, edítalo desde esa pantalla' },
+                { status: 409 }
+            )
         }
 
         const json = await req.json()
@@ -31,27 +49,23 @@ export async function POST(req: Request) {
         }
         const data = parsed.data
 
-        // Normaliza los puntos "solo estatus": ignora cualquier
-        // responsable/días/subpuntos que haya mandado el cliente y fuerza
-        // al Administrador que registra como responsable técnico (no se
-        // expone en el formulario, es solo para satisfacer la FK).
+        // Campos extra que no son parte del proyecto en sí, solo de esta
+        // ruta: si el Admin confirmó el envío del aviso al cliente, y con
+        // qué mensaje (lo revisó/editó en la vista previa del modal).
+        const notificarCliente = json?.notificarCliente === true
+        const mensajeCorreo: string = typeof json?.mensajeCorreo === 'string' ? json.mensajeCorreo : ''
+
         const mainPointsSoloEstatus = data.mainPoints.map((p) =>
             esPuntoSoloEstatus(p.mainPointKey)
                 ? { ...p, responsibleId: session.user!.id, estimatedDays: 0, children: undefined }
                 : p
         )
-        // Cualquier subpunto (o punto principal) que se haya quedado sin
-        // responsable porque el proyecto sigue como borrador se rellena con
-        // el Admin que guarda, solo para no violar la FK. Se reemplaza en
-        // cuanto el propio Admin le asigne el responsable real y vuelva a guardar.
         const mainPoints = mainPointsSoloEstatus.map((p) => ({
             ...p,
             responsibleId: p.responsibleId || session.user!.id,
             children: p.children ? rellenarResponsablesFaltantes(p.children, session.user!.id) : p.children,
         }))
 
-        // Todos los responsables (de los puntos con trabajo real) deben ser
-        // trabajadores existentes.
         const idsResponsables = new Set<string>()
         function recolectarIds(nodes: { responsibleId: string; children?: any[] }[]) {
             for (const n of nodes) {
@@ -74,22 +88,26 @@ export async function POST(req: Request) {
             )
         }
 
-        const folio = await generarFolioUnico()
-
-        // Solo los puntos con trabajo real (los primeros 4) cuentan para la
-        // fecha de entrega sugerida. Es la fecha de fin más tardía entre
-        // todos sus subpuntos (a cualquier profundidad); si aún no hay
-        // ninguna fecha capturada (ej. borrador temprano), se cae de
-        // respaldo al cálculo por suma de días hábiles.
         const puntosConTrabajo = mainPoints.filter((p) => !esPuntoSoloEstatus(p.mainPointKey))
         const estimatedDeliveryAuto =
             fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || [])) ??
             calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
 
-        const project = await prisma.project.create({
+        const nuevaEntregaManual = data.estimatedDeliveryManual ? new Date(data.estimatedDeliveryManual) : null
+
+        // Para la bitácora: qué cambió de verdad (independiente de si se
+        // avisa o no al cliente).
+        const entregaAnterior = existente.estimatedDeliveryManual ?? existente.estimatedDeliveryAuto
+        const entregaNueva = nuevaEntregaManual ?? estimatedDeliveryAuto
+        const cambioEntrega = entregaAnterior?.getTime() !== entregaNueva?.getTime()
+        const cambioPago =
+            (existente.cost ?? null) !== (data.cost ?? null) ||
+            (existente.advancePayment ?? null) !== (data.advancePayment ?? null) ||
+            existente.paymentStatus !== data.paymentStatus
+
+        const project = await prisma.project.update({
+            where: { id: existente.id },
             data: {
-                folio,
-                recordStatus: data.recordStatus,
                 title: data.title,
                 clientName: data.clientName,
                 company: data.company || null,
@@ -102,76 +120,68 @@ export async function POST(req: Request) {
                 clientSignature: data.clientSignature || null,
                 receiverSignature: data.receiverSignature || null,
                 estimatedDeliveryAuto,
-                estimatedDeliveryManual: data.estimatedDeliveryManual
-                    ? new Date(data.estimatedDeliveryManual)
-                    : null,
+                estimatedDeliveryManual: nuevaEntregaManual,
                 clientCanSeeSubpoints: data.clientCanSeeSubpoints,
-                status: 'en_proceso',
-                createdById: session.user.id,
+                // recordStatus/status/folio/createdById nunca se tocan aquí.
             },
         })
 
-        await crearArbolFases(project.id, mainPoints)
+        await actualizarArbolFasesPreservandoProgreso(project.id, mainPoints)
 
         await prisma.statusHistory.create({
             data: {
                 projectId: project.id,
-                status: data.recordStatus === 'registrado' ? 'registrado' : 'borrador',
+                status: 'registrado',
                 note:
-                    data.recordStatus === 'registrado'
-                        ? 'Proyecto registrado en el sistema'
-                        : 'Proyecto guardado como borrador',
+                    'Proyecto editado' +
+                    (cambioEntrega ? ' · cambió la fecha de entrega' : '') +
+                    (cambioPago ? ' · cambiaron los datos de pago' : '') +
+                    (notificarCliente ? ' · se avisó al cliente por correo' : ''),
                 changedById: session.user.id,
             },
         })
 
-        // Si se registra de forma definitiva y el cliente dejó correo,
-        // generamos el PDF y se lo mandamos por Resend. Un fallo aquí NO debe
-        // tumbar el registro (el proyecto ya se guardó bien); solo avisamos.
         let emailEnviado = false
         let emailError: string | null = null
 
-        if (data.recordStatus === 'registrado' && project.email) {
+        if (notificarCliente && project.email && mensajeCorreo.trim()) {
             try {
-                const pdfBuffer = await generarOrdenTrabajoPDF(project.id)
                 await resend.emails.send({
                     from: process.env.RESEND_FROM!,
                     to: project.email,
-                    subject: `Brosma - Orden de trabajo ${folio}`,
+                    subject: `Brosma - Actualización de tu proyecto ${folio}`,
                     html: `
                         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
                             <h2 style="color: #000;">Hola ${project.clientName} 👋</h2>
-                            <p>Gracias por confiar en <strong>Brosma</strong>. Hemos registrado tu proyecto "${project.title}" correctamente.</p>
                             <div style="background: #f9f9f9; border-radius: 8px; padding: 16px; margin: 16px 0;">
-                                <p style="margin: 0 0 4px; color: #666; font-size: 12px;">FOLIO DE SEGUIMIENTO</p>
-                                <p style="margin: 0; font-size: 20px; font-weight: bold; font-family: monospace;">${folio}</p>
+                                <p style="margin: 0 0 4px; color: #666; font-size: 12px;">FOLIO</p>
+                                <p style="margin: 0; font-size: 18px; font-weight: bold; font-family: monospace;">${folio}</p>
                             </div>
-                            <p>Adjunto encontrarás tu orden de trabajo con los detalles del proyecto.</p>
+                            <p style="white-space: pre-line;">${mensajeCorreo.replace(/</g, '&lt;')}</p>
                             <p style="color: #666; font-size: 12px; margin-top: 24px;">
                                 Brosma · Este es un mensaje automático, por favor no respondas a este correo.
                             </p>
                         </div>
                     `,
-                    attachments: [
-                        {
-                            filename: `orden-${folio}.pdf`,
-                            content: pdfBuffer,
-                        },
-                    ],
                 })
                 emailEnviado = true
+                await prisma.statusHistory.create({
+                    data: {
+                        projectId: project.id,
+                        status: 'registrado',
+                        note: 'Correo de aviso enviado al cliente por modificación',
+                        changedById: session.user.id,
+                    },
+                })
             } catch (err) {
-                console.error('Error enviando correo de registro:', err)
-                emailError = 'El proyecto se registró bien, pero no se pudo enviar el correo al cliente.'
+                console.error('Error enviando correo de aviso de cambios:', err)
+                emailError = 'Los cambios se guardaron bien, pero no se pudo enviar el correo al cliente.'
             }
         }
 
-        return NextResponse.json(
-            { folio: project.folio, emailEnviado, emailError },
-            { status: 201 }
-        )
+        return NextResponse.json({ folio: project.folio, emailEnviado, emailError, cambioEntrega, cambioPago })
     } catch (error) {
         console.error(error)
-        return NextResponse.json({ error: 'Error al registrar el proyecto' }, { status: 500 })
+        return NextResponse.json({ error: 'Error al editar el proyecto' }, { status: 500 })
     }
 }

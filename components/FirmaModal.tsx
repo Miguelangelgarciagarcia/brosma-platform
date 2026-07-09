@@ -1,17 +1,39 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SignatureCanvas from 'react-signature-canvas'
 
 type Props = {
     label: string
     firmaRef: React.RefObject<SignatureCanvas | null>
+    // Firma ya guardada de antes (modo editar): se precarga en el canvas
+    // oculto para que no parezca que se perdió, aunque el Admin no la toque.
+    initialDataUrl?: string
 }
 
-export default function FirmaModal({ label, firmaRef }: Props) {
+export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
     const [modalAbierto, setModalAbierto] = useState(false)
-    const [firmada, setFirmada] = useState(false)
+    const [firmada, setFirmada] = useState(!!initialDataUrl)
     const modalSigRef = useRef<SignatureCanvas>(null)
+
+    useEffect(() => {
+        if (!initialDataUrl || !firmaRef.current) return
+        const img = new Image()
+        img.src = initialDataUrl
+        img.onload = () => {
+            const canvas = firmaRef.current?.getCanvas()
+            if (canvas) {
+                const ctx = canvas.getContext('2d')
+                ctx?.clearRect(0, 0, canvas.width, canvas.height)
+                ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
+            }
+        }
+        ;(firmaRef as any)._dataUrl = initialDataUrl
+        setFirmada(true)
+        // Solo al montar: si el Admin la reemplaza o la borra después, esos
+        // handlers ya se encargan de actualizar _dataUrl y "firmada".
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     function abrirModal() {
         setModalAbierto(true)
@@ -45,7 +67,10 @@ export default function FirmaModal({ label, firmaRef }: Props) {
 
     function limpiarFirma() {
         firmaRef.current?.clear()
-        ;(firmaRef as any)._dataUrl = null
+        // '' (no null/undefined) marca "la borré a propósito": así el
+        // formulario sabe que debe mandar "sin firma" en vez de recuperar la
+        // que ya estaba guardada.
+        ;(firmaRef as any)._dataUrl = ''
         setFirmada(false)
     }
 

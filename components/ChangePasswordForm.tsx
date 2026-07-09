@@ -1,17 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    boxSizing: 'border-box',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '10px 12px',
-    color: 'var(--fg1)',
-    fontSize: '14px',
-}
+import PasswordInput from '@/components/PasswordInput'
 
 export default function ChangePasswordForm() {
     const [currentPassword, setCurrentPassword] = useState('')
@@ -75,12 +65,10 @@ export default function ChangePasswordForm() {
                 <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
                     Contraseña actual
                 </label>
-                <input
-                    type="password"
+                <PasswordInput
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    style={inputStyle}
                 />
             </div>
 
@@ -88,13 +76,11 @@ export default function ChangePasswordForm() {
                 <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
                     Nueva contraseña (mínimo 8 caracteres)
                 </label>
-                <input
-                    type="password"
+                <PasswordInput
                     required
                     minLength={8}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    style={inputStyle}
                 />
             </div>
 
@@ -102,13 +88,11 @@ export default function ChangePasswordForm() {
                 <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
                     Confirmar nueva contraseña
                 </label>
-                <input
-                    type="password"
+                <PasswordInput
                     required
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={inputStyle}
                 />
             </div>
 

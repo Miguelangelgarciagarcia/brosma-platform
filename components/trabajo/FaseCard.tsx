@@ -14,15 +14,21 @@ type Props = {
         project: { folio: string; title: string; clientName: string }
         parent: { title: string } | null
     }
+    // Resalta la card (se usa en la sección "Corriendo hoy").
+    destacado?: boolean
+    // Ya se marcó "Iniciar" y sigue sin terminar.
+    trabajando?: boolean
+    // Ya pasó la fecha de fin y sigue sin terminar.
+    retrasado?: boolean
 }
 
 function formatDate(d: Date | string | null) {
     if (!d) return null
     const date = typeof d === 'string' ? new Date(d) : d
-    return new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' }).format(date)
+    return new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(date)
 }
 
-export default function FaseCard({ fase }: Props) {
+export default function FaseCard({ fase, destacado, trabajando, retrasado }: Props) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -52,8 +58,10 @@ export default function FaseCard({ fase }: Props) {
         <div
             style={{
                 background: 'var(--bg-card)',
-                border: '1px solid var(--border-default)',
-                borderLeft: `3px solid ${fase.status === 'completado' ? 'var(--accent)' : fase.status === 'en_proceso' ? '#e0a020' : 'var(--border-default)'}`,
+                border: `1px solid ${retrasado ? '#e0503a' : destacado ? 'var(--accent)' : 'var(--border-default)'}`,
+                borderLeft: `3px solid ${
+                    retrasado ? '#e0503a' : fase.status === 'completado' ? 'var(--accent)' : fase.status === 'en_proceso' ? '#e0a020' : 'var(--border-default)'
+                }`,
                 borderRadius: 'var(--radius-md)',
                 padding: '14px',
                 display: 'flex',
@@ -61,8 +69,42 @@ export default function FaseCard({ fase }: Props) {
                 gap: '8px',
             }}
         >
-            <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--fg3)' }}>
-                {fase.project.folio} · {fase.project.title}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--fg3)' }}>
+                    {fase.project.folio} · {fase.project.title}
+                </div>
+                {(trabajando || retrasado) && (
+                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        {retrasado && (
+                            <span
+                                style={{
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    color: '#e0503a',
+                                    background: 'rgba(224,80,58,0.12)',
+                                    borderRadius: '999px',
+                                    padding: '2px 8px',
+                                }}
+                            >
+                                ⚠ Retrasado{!trabajando ? ' · sin iniciar' : ''}
+                            </span>
+                        )}
+                        {trabajando && (
+                            <span
+                                style={{
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    color: '#e0a020',
+                                    background: 'rgba(224,160,32,0.12)',
+                                    borderRadius: '999px',
+                                    padding: '2px 8px',
+                                }}
+                            >
+                                ▶ Trabajando
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div style={{ fontSize: '14px', fontWeight: 600 }}>
@@ -101,11 +143,15 @@ export default function FaseCard({ fase }: Props) {
                         Iniciar
                     </button>
                 )}
-                {fase.status !== 'completado' && (
+                {fase.status === 'en_proceso' && (
                     <button
                         type="button"
                         disabled={loading}
-                        onClick={() => actualizar('completado')}
+                        onClick={() => {
+                            if (window.confirm('¿Estás seguro de marcar este punto como terminado?')) {
+                                actualizar('completado')
+                            }
+                        }}
                         style={{
                             fontSize: '12px',
                             padding: '8px 14px',

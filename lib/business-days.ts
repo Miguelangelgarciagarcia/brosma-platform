@@ -29,6 +29,8 @@ export function addBusinessDays(startDate: Date, days: number): Date {
 /**
  * Suma los `estimatedDays` de una lista de puntos principales y devuelve
  * la fecha de entrega sugerida a partir de hoy.
+ * Se usa solo como respaldo cuando todavía no hay ningún subpunto con
+ * fechas capturadas (ej. un borrador muy temprano).
  */
 export function calcularFechaEntregaSugerida(
     diasEstimadosPorPunto: (number | null | undefined)[],
@@ -39,4 +41,39 @@ export function calcularFechaEntregaSugerida(
         0
     )
     return addBusinessDays(desde, totalDias)
+}
+
+type NodoConFechas = {
+    endDate?: string | null
+    children?: NodoConFechas[] | null
+}
+
+// "YYYY-MM-DD" (lo que manda un <input type="date">) se interpreta en hora
+// LOCAL a propósito. Si se deja que Date lo parsee tal cual, JS lo toma
+// como UTC medianoche, y al mostrarlo en un huso horario detrás de UTC
+// (México, por ejemplo) se recorre un día para atrás. Las fechas ISO
+// completas (con hora, como las que ya vienen del backend) se parsean tal cual.
+function parseFecha(str: string): Date {
+    return /^\d{4}-\d{2}-\d{2}$/.test(str) ? new Date(str + 'T00:00:00') : new Date(str)
+}
+
+/**
+ * La entrega sugerida real: la fecha de fin más tardía entre TODOS los
+ * subpuntos capturados (a cualquier profundidad), de los 4 puntos con
+ * trabajo real. Como cada subpunto ya trae su propia fecha de fin puesta
+ * a mano por el Admin, no hace falta sumar días desde hoy: el proyecto
+ * queda listo cuando termina la tarea que más tarda.
+ */
+export function fechaMasTardiaDeSubpuntos(nodes: NodoConFechas[] | null | undefined): Date | null {
+    if (!nodes || nodes.length === 0) return null
+    let max: Date | null = null
+    for (const n of nodes) {
+        if (n.endDate) {
+            const d = parseFecha(n.endDate)
+            if (!isNaN(d.getTime()) && (!max || d > max)) max = d
+        }
+        const childMax = fechaMasTardiaDeSubpuntos(n.children)
+        if (childMax && (!max || childMax > max)) max = childMax
+    }
+    return max
 }

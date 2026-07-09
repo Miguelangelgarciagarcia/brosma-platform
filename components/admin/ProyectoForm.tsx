@@ -1,0 +1,671 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import SignatureCanvas from 'react-signature-canvas'
+import FirmaModal from '@/components/FirmaModal'
+import SubpointEditor, { SubpointNode, nuevoSubpunto, duracionDias, nodoCompleto } from '@/components/admin/SubpointEditor'
+import { MAIN_POINTS, esPuntoSoloEstatus } from '@/lib/main-points'
+import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
+
+type MainPointState = {
+    mainPointKey: string
+    label: string
+    responsibleId: string
+    children: SubpointNode[]
+}
+
+// Los días estimados de un punto principal ya no se escriben a mano: se
+// derivan de la suma de la duración (en días naturales) de sus subpuntos
+// de primer nivel (1.1, 1.2, ...). Los sub-subpuntos son solo desglose
+// interno de esos rangos, no suman aparte.
+function diasCalculados(children: SubpointNode[]): number {
+    return children.reduce((sum, c) => sum + duracionDias(c.startDate, c.endDate), 0)
+}
+
+// Cualquier subpunto que ya exista (a cualquier profundidad) debe traer
+// título, responsable, fecha de inicio y fecha de fin completos, tanto para
+// guardar como borrador como para registrar — no se permite dejar uno a
+// medias colgado en el árbol.
+function validarSubpuntosCompletos(nodes: SubpointNode[], pathLabel: string): string | null {
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
+        const label = `${pathLabel}.${i + 1}`
+        if (!nodoCompleto(n)) {
+            const faltantes: string[] = []
+            if (!n.title.trim()) faltantes.push('título')
+            if (!n.responsibleId) faltantes.push('responsable')
+            if (!n.startDate) faltantes.push('fecha de inicio')
+            if (!n.endDate) faltantes.push('fecha de fin')
+            return `Subpunto ${label}: falta ${faltantes.join(', ')}`
+        }
+        const errorHijos = validarSubpuntosCompletos(n.children, label)
+        if (errorHijos) return errorHijos
+    }
+    return null
+}
+
+const inputStyle: React.CSSProperties = {
+    width: '100%',
+    boxSizing: 'border-box',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-default)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '10px 12px',
+    color: 'var(--fg1)',
+    fontSize: '13px',
+}
+
+const labelStyle: React.CSSProperties = {
+    fontSize: '11px',
+    color: 'var(--fg2)',
+    display: 'block',
+    marginBottom: '4px',
+}
+
+const sectionStyle: React.CSSProperties = {
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-default)',
+    borderRadius: 'var(--radius-md)',
+    padding: '18px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Deja solo dígitos y, como mucho, un punto decimal (nada de $, comas, letras, etc.)
+function sanitizeNumeric(value: string): string {
+    let v = value.replace(/[^0-9.]/g, '')
+    const parts = v.split('.')
+    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('')
+    return v
+}
+
+function sanitizePhone(value: string): string {
+    return value.replace(/\D/g, '').slice(0, 15)
+}
+
+function limpiarSubpuntosParaEnvio(nodes: SubpointNode[]): any[] {
+    return nodes.map((n) => ({
+        title: n.title,
+        description: n.description || undefined,
+        responsibleId: n.responsibleId,
+        startDate: n.startDate ? new Date(n.startDate).toISOString() : undefined,
+        endDate: n.endDate ? new Date(n.endDate).toISOString() : undefined,
+        children: n.children.length ? limpiarSubpuntosParaEnvio(n.children) : undefined,
+    }))
+}
+
+export type ProyectoFormInitialData = {
+    title: string
+    clientName: string
+    company: string
+    phone: string
+    email: string
+    cost: string
+    advancePayment: string
+    notes: string
+    estimatedDeliveryManual: string
+    clientCanSeeSubpoints: boolean
+    clientSignature: string
+    receiverSignature: string
+    mainPoints: { mainPointKey: string; responsibleId: string; children: SubpointNode[] }[]
+}
+
+type Props = {
+    mode: 'crear' | 'editar'
+    folio?: string
+    initial?: ProyectoFormInitialData
+}
+
+export default function ProyectoForm({ mode, folio, initial }: Props) {
+    const router = useRouter()
+    const clienteSigRef = useRef<SignatureCanvas>(null)
+    const receptorSigRef = useRef<SignatureCanvas>(null)
+
+    const [loading, setLoading] = useState<'borrador' | 'registrado' | null>(null)
+    const [error, setError] = useState('')
+    const [trabajadores, setTrabajadores] = useState<{ id: string; name: string }[]>([])
+
+    const [form, setForm] = useState({
+        title: initial?.title ?? '',
+        clientName: initial?.clientName ?? '',
+        company: initial?.company ?? '',
+        phone: initial?.phone ?? '',
+        email: initial?.email ?? '',
+        cost: initial?.cost ?? '',
+        advancePayment: initial?.advancePayment ?? '',
+        notes: initial?.notes ?? '',
+        estimatedDeliveryManual: initial?.estimatedDeliveryManual ?? '',
+        clientCanSeeSubpoints: initial?.clientCanSeeSubpoints ?? false,
+    })
+
+    const [mainPoints, setMainPoints] = useState<MainPointState[]>(() =>
+        MAIN_POINTS.map((p) => {
+            const found = initial?.mainPoints.find((mp) => mp.mainPointKey === p.key)
+            return {
+                mainPointKey: p.key,
+                label: p.label,
+                responsibleId: found?.responsibleId ?? '',
+                children: found?.children ?? [],
+            }
+        })
+    )
+
+    useEffect(() => {
+        fetch('/api/usuarios')
+            .then((r) => r.json())
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setTrabajadores(data.filter((u: any) => u.role === 'trabajador'))
+                }
+            })
+    }, [])
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+        const { name, value, type } = e.target as HTMLInputElement
+        setForm((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+        }))
+    }
+
+    function updateMainPoint(index: number, patch: Partial<MainPointState>) {
+        setMainPoints((prev) => prev.map((mp, i) => (i === index ? { ...mp, ...patch } : mp)))
+    }
+
+    function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setForm((prev) => ({ ...prev, phone: sanitizePhone(e.target.value) }))
+    }
+
+    function handleCostChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const v = sanitizeNumeric(e.target.value)
+        setForm((prev) => {
+            const costNum = parseFloat(v || '0')
+            const advanceNum = parseFloat(prev.advancePayment || '0')
+            // Sin costo no puede haber adelanto. Si el costo baja (o se borra)
+            // por debajo del adelanto ya escrito, lo topamos o lo limpiamos.
+            const advancePayment = costNum <= 0 ? '' : advanceNum > costNum ? v : prev.advancePayment
+            return { ...prev, cost: v, advancePayment }
+        })
+    }
+
+    const costoValido = parseFloat(form.cost || '0') > 0
+
+    function handleAdvanceChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const v = sanitizeNumeric(e.target.value)
+        setForm((prev) => {
+            const costNum = parseFloat(prev.cost || '0')
+            const advanceNum = parseFloat(v || '0')
+            // El adelanto nunca puede superar el costo.
+            const advancePayment = prev.cost && advanceNum > costNum ? prev.cost : v
+            return { ...prev, advancePayment }
+        })
+    }
+
+    // Estatus de pago: se calcula solo, nunca se edita a mano.
+    const paymentStatus = useMemo(() => {
+        const cost = parseFloat(form.cost || '0')
+        const advance = parseFloat(form.advancePayment || '0')
+        if (!form.advancePayment || advance <= 0) return 'pendiente'
+        if (cost > 0 && advance >= cost) return 'pagado'
+        return 'anticipo'
+    }, [form.cost, form.advancePayment])
+
+    const emailValido = useMemo(() => !form.email || EMAIL_REGEX.test(form.email), [form.email])
+
+    // La entrega sugerida es la fecha de fin más tardía entre todos los
+    // subpuntos capturados (a cualquier profundidad) en los 4 puntos con
+    // trabajo real. Si todavía no hay ninguna fecha capturada, cae de
+    // respaldo al cálculo viejo (hoy + días hábiles), que en ese caso da 0.
+    const fechaSugerida = useMemo(() => {
+        const puntosConTrabajo = mainPoints.filter((mp) => !esPuntoSoloEstatus(mp.mainPointKey))
+        const maxima = fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((mp) => mp.children))
+        if (maxima) return maxima
+        const dias = puntosConTrabajo.map((mp) => diasCalculados(mp.children))
+        return calcularFechaEntregaSugerida(dias)
+    }, [mainPoints])
+
+    async function enviar(recordStatus: 'borrador' | 'registrado') {
+        setLoading(recordStatus)
+        setError('')
+
+        try {
+            if (!form.title.trim()) throw new Error('Falta la descripción breve del proyecto')
+            if (!form.clientName.trim()) throw new Error('Falta el nombre del cliente')
+            if (!form.company.trim()) throw new Error('Falta la empresa')
+            if (!form.phone.trim()) throw new Error('Falta el teléfono')
+            if (!form.email.trim()) throw new Error('Falta el correo')
+            if (!EMAIL_REGEX.test(form.email)) {
+                throw new Error('El correo del cliente no tiene un formato válido')
+            }
+
+            // Válido tanto para guardar borrador como para registrar: si un
+            // punto ya tiene responsable asignado o subpuntos agregados, no
+            // se puede dejar a medias — título, responsable, fecha inicio y
+            // fecha fin deben estar completos en cada subpunto que exista.
+            for (const mp of mainPoints) {
+                if (esPuntoSoloEstatus(mp.mainPointKey)) continue
+                const errorSubpuntos = validarSubpuntosCompletos(mp.children, `${mainPoints.indexOf(mp) + 1}`)
+                if (errorSubpuntos) throw new Error(`"${mp.label}" → ${errorSubpuntos}`)
+            }
+
+            if (recordStatus === 'registrado') {
+                for (const mp of mainPoints) {
+                    if (esPuntoSoloEstatus(mp.mainPointKey)) continue
+                    if (!mp.responsibleId) {
+                        throw new Error(`Falta asignar responsable en "${mp.label}"`)
+                    }
+                    if (diasCalculados(mp.children) <= 0) {
+                        throw new Error(
+                            `Falta agregar al menos un subpunto con fecha de inicio y fin en "${mp.label}"`
+                        )
+                    }
+                }
+            }
+
+            // _dataUrl queda definido (aunque sea '') en cuanto FirmaModal
+            // precarga una firma existente, la reemplaza, o el Admin la
+            // borra a propósito. Solo si NUNCA se tocó (undefined) se cae al
+            // valor original -> así "borrar" no revive la firma anterior.
+            const clientDataUrl = (clienteSigRef as any)._dataUrl
+            const clientSig = clientDataUrl !== undefined ? clientDataUrl : initial?.clientSignature || ''
+            const receiverDataUrl = (receptorSigRef as any)._dataUrl
+            const receiverSig = receiverDataUrl !== undefined ? receiverDataUrl : initial?.receiverSignature || ''
+
+            const body = {
+                recordStatus,
+                title: form.title,
+                clientName: form.clientName,
+                company: form.company,
+                phone: form.phone,
+                email: form.email,
+                cost: form.cost ? Number(form.cost) : undefined,
+                advancePayment: form.advancePayment ? Number(form.advancePayment) : undefined,
+                paymentStatus,
+                notes: form.notes || undefined,
+                clientSignature: clientSig || undefined,
+                receiverSignature: receiverSig || undefined,
+                estimatedDeliveryManual: form.estimatedDeliveryManual
+                    ? new Date(form.estimatedDeliveryManual).toISOString()
+                    : undefined,
+                clientCanSeeSubpoints: form.clientCanSeeSubpoints,
+                mainPoints: mainPoints.map((mp) => ({
+                    mainPointKey: mp.mainPointKey,
+                    responsibleId: mp.responsibleId || trabajadores[0]?.id || '',
+                    estimatedDays: esPuntoSoloEstatus(mp.mainPointKey) ? 0 : diasCalculados(mp.children),
+                    children: mp.children.length ? limpiarSubpuntosParaEnvio(mp.children) : undefined,
+                })),
+            }
+
+            const url = mode === 'editar' ? `/api/proyectos/${folio}` : '/api/proyectos'
+            const method = mode === 'editar' ? 'PATCH' : 'POST'
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            })
+
+            const json = await res.json()
+            if (!res.ok) {
+                // Si el servidor mandó el detalle campo por campo (Zod), lo
+                // mostramos en vez del genérico "Datos inválidos" para saber
+                // exactamente qué falta sin adivinar.
+                if (Array.isArray(json?.issues) && json.issues.length > 0) {
+                    const detalle = json.issues
+                        .map((i: { path: string; message: string }) => `${i.path || '(general)'}: ${i.message}`)
+                        .join(' | ')
+                    throw new Error(`${json.error}: ${detalle}`)
+                }
+                throw new Error(json.error || 'Error al guardar')
+            }
+
+            if (json.emailError) {
+                alert(json.emailError)
+            }
+
+            if (mode === 'editar') {
+                router.push(`/admin/proyecto/${json.folio || folio}`)
+            } else {
+                router.push('/admin')
+            }
+            router.refresh()
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setLoading(null)
+        }
+    }
+
+    const volverHref = mode === 'editar' && folio ? `/admin/proyecto/${folio}` : '/admin'
+
+    return (
+        <main style={{ minHeight: '100vh' }}>
+            <div
+                style={{
+                    borderBottom: '1px solid var(--border-subtle)',
+                    padding: '14px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
+                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
+                <Link href={volverHref} style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                    ← Volver
+                </Link>
+            </div>
+
+            <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                    {mode === 'editar' ? `Editar proyecto ${folio}` : 'Nuevo proyecto'}
+                </h1>
+
+                {mode === 'editar' && (
+                    <p style={{ fontSize: '12px', color: '#e0a020', margin: 0 }}>
+                        Este proyecto sigue como borrador. Puedes seguir editándolo o registrarlo definitivamente
+                        desde aquí. Una vez registrado, ya no se podrá editar desde esta pantalla.
+                    </p>
+                )}
+
+                <section style={sectionStyle}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos generales</h2>
+                    <div>
+                        <label style={labelStyle}>Descripción breve del proyecto *</label>
+                        <input name="title" value={form.title} onChange={handleChange} placeholder="Molde para tapa de envase 500ml" style={inputStyle} />
+                    </div>
+                </section>
+
+                <section style={sectionStyle}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos del cliente</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                            <label style={labelStyle}>Nombre completo *</label>
+                            <input name="clientName" value={form.clientName} onChange={handleChange} style={inputStyle} />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Empresa *</label>
+                            <input name="company" value={form.company} onChange={handleChange} style={inputStyle} />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Teléfono *</label>
+                            <input
+                                name="phone"
+                                value={form.phone}
+                                onChange={handlePhoneChange}
+                                inputMode="numeric"
+                                placeholder="10 dígitos"
+                                style={inputStyle}
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Correo *</label>
+                            <input
+                                name="email"
+                                type="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                style={{
+                                    ...inputStyle,
+                                    border: `1px solid ${emailValido ? 'var(--border-default)' : '#ff6b6b'}`,
+                                }}
+                            />
+                            {!emailValido && (
+                                <p style={{ color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>
+                                    Correo con formato inválido
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                <section style={sectionStyle}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos financieros</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                        <div>
+                            <label style={labelStyle}>Costo</label>
+                            <input
+                                name="cost"
+                                inputMode="decimal"
+                                value={form.cost}
+                                onChange={handleCostChange}
+                                placeholder="0.00"
+                                style={inputStyle}
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Adelanto</label>
+                            <input
+                                name="advancePayment"
+                                inputMode="decimal"
+                                value={form.advancePayment}
+                                onChange={handleAdvanceChange}
+                                disabled={!costoValido}
+                                placeholder={costoValido ? '0.00' : 'Primero coloca el costo'}
+                                style={{
+                                    ...inputStyle,
+                                    opacity: costoValido ? 1 : 0.5,
+                                    cursor: costoValido ? 'text' : 'not-allowed',
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Estatus de pago</label>
+                            <div
+                                style={{
+                                    ...inputStyle,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'transparent',
+                                    cursor: 'default',
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        padding: '4px 10px',
+                                        borderRadius: '999px',
+                                        background:
+                                            paymentStatus === 'pagado'
+                                                ? 'rgba(47,111,237,0.15)'
+                                                : paymentStatus === 'anticipo'
+                                                ? 'rgba(224,160,32,0.15)'
+                                                : 'rgba(255,255,255,0.06)',
+                                        color:
+                                            paymentStatus === 'pagado'
+                                                ? 'var(--accent-hover)'
+                                                : paymentStatus === 'anticipo'
+                                                ? '#e0a020'
+                                                : 'var(--fg3)',
+                                    }}
+                                >
+                                    {paymentStatus === 'pagado' ? 'Pagado' : paymentStatus === 'anticipo' ? 'Anticipo' : 'Pendiente'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: 0 }}>
+                        El estatus se calcula solo a partir del costo y el adelanto: sin adelanto es "Pendiente",
+                        adelanto igual al costo es "Pagado", cualquier otro adelanto mayor a cero es "Anticipo".
+                    </p>
+                    <div>
+                        <label style={labelStyle}>Notas</label>
+                        <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+                    </div>
+                </section>
+
+                <section style={sectionStyle}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Puntos principales y fases</h2>
+                    <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: 0 }}>
+                        Solo se configuran aquí los primeros 4 puntos (Planeación, Inicio de Proyecto, Pruebas,
+                        Calidad). "Listo para Entrega" y "Entregado" son banderas de estatus que se marcan después,
+                        directo desde el detalle del proyecto.
+                    </p>
+
+                    {trabajadores.length === 0 && (
+                        <p style={{ fontSize: '12px', color: '#e0a020', margin: 0 }}>
+                            No hay trabajadores dados de alta todavía. Necesitas al menos uno para asignar
+                            responsables (créalos desde Configuración).
+                        </p>
+                    )}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {mainPoints.map((mp, index) => {
+                            if (esPuntoSoloEstatus(mp.mainPointKey)) return null
+                            const dias = diasCalculados(mp.children)
+                            return (
+                                <div
+                                    key={mp.mainPointKey}
+                                    style={{
+                                        border: '1px solid var(--border-default)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '12px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
+                                    }}
+                                >
+                                    <div style={{ fontWeight: 600, fontSize: '13px' }}>
+                                        {index + 1}. {mp.label}
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        <select
+                                            value={mp.responsibleId}
+                                            onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
+                                            style={inputStyle}
+                                        >
+                                            <option value="">Responsable...</option>
+                                            {trabajadores.map((t) => (
+                                                <option key={t.id} value={t.id}>
+                                                    {t.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div
+                                            style={{
+                                                ...inputStyle,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                background: 'transparent',
+                                                color: 'var(--fg2)',
+                                            }}
+                                        >
+                                            <span>Días estimados</span>
+                                            <strong style={{ color: 'var(--fg1)' }}>{dias}</strong>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '10px', color: 'var(--fg3)', margin: 0 }}>
+                                        Se calcula solo con la suma de los rangos de fecha de los subpuntos 1er nivel
+                                        de abajo — agrégalos con sus fechas para que este número aparezca.
+                                    </p>
+
+                                    <SubpointEditor
+                                        nodes={mp.children}
+                                        onChange={(children) => updateMainPoint(index, { children })}
+                                        trabajadores={trabajadores}
+                                        depth={1}
+                                        pathLabel={`${index + 1}`}
+                                    />
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--fg2)' }}>
+                        <input
+                            type="checkbox"
+                            checked={form.clientCanSeeSubpoints}
+                            onChange={(e) => setForm((prev) => ({ ...prev, clientCanSeeSubpoints: e.target.checked }))}
+                        />
+                        El cliente puede ver el primer nivel de subpuntos (1.1, 1.2...) en su seguimiento
+                    </label>
+
+                    <div
+                        style={{
+                            background: 'rgba(47,111,237,0.08)',
+                            border: '1px solid var(--border-default)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '10px 12px',
+                        }}
+                    >
+                        <div style={{ fontSize: '12px', color: 'var(--fg1)' }}>
+                            Entrega sugerida: <strong>{fechaSugerida.toLocaleDateString('es-MX')}</strong>
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--fg3)', marginTop: '2px' }}>
+                            Es la fecha de fin más tardía entre todos los subpuntos que capturaste arriba (a
+                            cualquier nivel). Si todavía no hay fechas, se estima con días hábiles de Lunes a
+                            Sábado desde hoy.
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style={labelStyle}>Fecha de entrega (ajuste manual, opcional)</label>
+                        <input
+                            type="date"
+                            name="estimatedDeliveryManual"
+                            value={form.estimatedDeliveryManual}
+                            onChange={handleChange}
+                            style={{ ...inputStyle, colorScheme: 'dark' }}
+                        />
+                    </div>
+                </section>
+
+                <section style={sectionStyle}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Firmas</h2>
+                    <FirmaModal label="Firma del cliente" firmaRef={clienteSigRef} initialDataUrl={initial?.clientSignature || undefined} />
+                    <FirmaModal label="Firma de quien recibe" firmaRef={receptorSigRef} initialDataUrl={initial?.receiverSignature || undefined} />
+                </section>
+
+                {error && <p style={{ color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '32px' }}>
+                    <button
+                        type="button"
+                        disabled={loading !== null}
+                        onClick={() => enviar('borrador')}
+                        style={{
+                            flex: 1,
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-default)',
+                            color: 'var(--fg1)',
+                            padding: '14px',
+                            borderRadius: 'var(--radius-md)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            opacity: loading ? 0.6 : 1,
+                        }}
+                    >
+                        {loading === 'borrador' ? 'Guardando...' : 'Guardar para seguir editando'}
+                    </button>
+                    <button
+                        type="button"
+                        disabled={loading !== null}
+                        onClick={() => enviar('registrado')}
+                        style={{
+                            flex: 1,
+                            background: 'var(--accent)',
+                            border: 'none',
+                            color: '#fff',
+                            padding: '14px',
+                            borderRadius: 'var(--radius-md)',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                            fontSize: '13px',
+                            opacity: loading ? 0.6 : 1,
+                        }}
+                    >
+                        {loading === 'registrado' ? 'Registrando...' : 'Registrar'}
+                    </button>
+                </div>
+            </div>
+        </main>
+    )
+}

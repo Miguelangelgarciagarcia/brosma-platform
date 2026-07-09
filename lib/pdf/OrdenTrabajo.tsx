@@ -65,7 +65,14 @@ const styles = StyleSheet.create({
 function formatFecha(d: Date | string | null | undefined) {
     if (!d) return '—'
     const date = typeof d === 'string' ? new Date(d) : d
-    return new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+    // Igual que lib/dates.ts: forzamos UTC para que no se corra un día por
+    // el huso horario del servidor que genera el PDF.
+    return new Intl.DateTimeFormat('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+    }).format(date)
 }
 
 type MainPointRow = {

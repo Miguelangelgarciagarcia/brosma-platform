@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { esPuntoSoloEstatus } from '@/lib/main-points'
-import MarcarEstatusButton from '@/components/admin/MarcarEstatusButton'
+import PhaseTree from '@/components/admin/PhaseTree'
 
 type PhaseWithResp = {
     id: string
@@ -21,6 +21,10 @@ type PhaseWithResp = {
     responsible: { name: string }
 }
 
+function formatMonto(n: number): string {
+    return n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 function buildTree(phases: PhaseWithResp[]) {
     const byParent = new Map<string | null, PhaseWithResp[]>()
     for (const p of phases) {
@@ -35,63 +39,6 @@ function buildTree(phases: PhaseWithResp[]) {
     }
 
     return children(null)
-}
-
-function PhaseNode({ node, label }: { node: any; label: string }) {
-    return (
-        <div style={{ marginLeft: node.depth > 0 ? '16px' : 0, marginTop: '8px' }}>
-            <div
-                style={{
-                    border: '1px solid var(--border-subtle)',
-                    borderLeft: node.depth === 0 ? '3px solid var(--accent)' : '2px solid var(--border-default)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '10px 12px',
-                    background: node.depth === 0 ? 'var(--bg-card)' : 'transparent',
-                }}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                    <span style={{ fontSize: node.depth === 0 ? '13px' : '12px', fontWeight: node.depth === 0 ? 600 : 400 }}>
-                        {label}. {node.title}
-                    </span>
-                    <span
-                        style={{
-                            fontSize: '10px',
-                            padding: '2px 8px',
-                            borderRadius: '999px',
-                            background:
-                                node.status === 'completado'
-                                    ? 'rgba(47,111,237,0.15)'
-                                    : node.status === 'en_proceso'
-                                    ? 'rgba(224,160,32,0.15)'
-                                    : 'rgba(255,255,255,0.06)',
-                            color:
-                                node.status === 'completado'
-                                    ? 'var(--accent-hover)'
-                                    : node.status === 'en_proceso'
-                                    ? '#e0a020'
-                                    : 'var(--fg3)',
-                            height: 'fit-content',
-                        }}
-                    >
-                        {node.status}
-                    </span>
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--fg3)', marginTop: '4px' }}>
-                    Responsable: {node.responsible?.name}
-                    {node.estimatedDays != null && ` · ${node.estimatedDays} días estimados`}
-                </div>
-                {node.description && (
-                    <div style={{ fontSize: '12px', color: 'var(--fg2)', marginTop: '6px' }}>{node.description}</div>
-                )}
-                {node.depth === 0 && esPuntoSoloEstatus(node.mainPointKey) && node.status !== 'completado' && (
-                    <MarcarEstatusButton phaseId={node.id} />
-                )}
-            </div>
-            {node.children.map((child: any, i: number) => (
-                <PhaseNode key={child.id} node={child} label={`${label}.${i + 1}`} />
-            ))}
-        </div>
-    )
 }
 
 export default async function ProyectoDetallePage({
@@ -144,22 +91,60 @@ export default async function ProyectoDetallePage({
                             {project.email ? ` · ${project.email}` : ''}
                         </div>
                     </div>
-                    <a
-                        href={`/api/proyectos/${project.folio}/pdf`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            fontSize: '12px',
-                            color: 'var(--accent-hover)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '8px 14px',
-                            textDecoration: 'none',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        Ver PDF
-                    </a>
+                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        {project.recordStatus === 'borrador' && (
+                            <Link
+                                href={`/admin/proyecto/${project.folio}/editar`}
+                                style={{
+                                    fontSize: '12px',
+                                    color: '#fff',
+                                    background: 'var(--accent)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '8px 14px',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Editar
+                            </Link>
+                        )}
+                        {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
+                            <Link
+                                href={`/admin/proyecto/${project.folio}/editar-registrado`}
+                                style={{
+                                    fontSize: '12px',
+                                    color: '#fff',
+                                    background: 'var(--accent)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '8px 14px',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Editar
+                            </Link>
+                        )}
+                        {project.recordStatus === 'registrado' && (
+                            <a
+                                href={`/api/proyectos/${project.folio}/pdf`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    fontSize: '12px',
+                                    color: 'var(--accent-hover)',
+                                    border: '1px solid var(--border-default)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '8px 14px',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                Ver PDF
+                            </a>
+                        )}
+                    </div>
                 </div>
 
                 <div
@@ -186,7 +171,19 @@ export default async function ProyectoDetallePage({
                     <div>
                         <div style={{ fontSize: '10px', color: 'var(--fg3)' }}>PAGO</div>
                         <div style={{ fontSize: '13px' }}>
-                            {project.paymentStatus} {project.cost ? `· $${project.cost}` : ''}
+                            {project.paymentStatus === 'pagado' && (
+                                <>
+                                    <strong style={{ color: 'var(--accent-hover)' }}>PAGADO</strong>
+                                    {project.cost != null && ` · $${formatMonto(project.cost)}`}
+                                </>
+                            )}
+                            {project.paymentStatus === 'anticipo' && (
+                                <>
+                                    Faltan ${formatMonto((project.cost ?? 0) - (project.advancePayment ?? 0))}
+                                    {' '}de ${formatMonto(project.cost ?? 0)}
+                                </>
+                            )}
+                            {project.paymentStatus === 'pendiente' && 'Pendiente'}
                         </div>
                     </div>
                 </div>
@@ -202,9 +199,23 @@ export default async function ProyectoDetallePage({
                     <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '4px' }}>
                         Fases del proyecto
                     </h2>
-                    {tree.map((node, i) => (
-                        <PhaseNode key={node.id} node={node} label={`${i + 1}`} />
-                    ))}
+                    {project.recordStatus === 'borrador' && (
+                        <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: '0 0 8px' }}>
+                            "Listo para Entrega" y "Entregado" no se muestran todavía: son banderas de estatus que
+                            solo aplican una vez registrado el proyecto.
+                        </p>
+                    )}
+                    <PhaseTree
+                        nodes={tree.filter(
+                            (node) => project.recordStatus !== 'borrador' || !esPuntoSoloEstatus(node.mainPointKey ?? '')
+                        )}
+                        proyecto={{
+                            folio: project.folio,
+                            title: project.title,
+                            clientName: project.clientName,
+                            email: project.email,
+                        }}
+                    />
                 </div>
             </div>
         </main>

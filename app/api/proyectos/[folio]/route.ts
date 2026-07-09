@@ -2,19 +2,37 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { createProjectSchema } from '@/lib/validations/project'
-import { crearArbolFases } from '@/lib/phase-tree'
-import { generarFolioUnico } from '@/lib/folio'
+import { reemplazarArbolFases } from '@/lib/phase-tree'
 import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
 import { esPuntoSoloEstatus, rellenarResponsablesFaltantes } from '@/lib/main-points'
 import { generarOrdenTrabajoPDF } from '@/lib/pdf/generar-orden'
 import { resend } from '@/lib/resend'
 
-export async function POST(req: Request) {
+// Edición de un proyecto que TODAVÍA es borrador (recordStatus === 'borrador').
+// Una vez registrado (folio+PDF+correo ya salieron), esta ruta se cierra a
+// propósito: editar un proyecto ya registrado es un caso distinto (implica
+// avisar al cliente de cambios) que no está cubierto todavía.
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ folio: string }> }
+) {
     try {
         const session = await auth()
         if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
         if (session.user?.role !== 'admin') {
-            return NextResponse.json({ error: 'Solo un Administrador puede registrar proyectos' }, { status: 403 })
+            return NextResponse.json({ error: 'Solo un Administrador puede editar proyectos' }, { status: 403 })
+        }
+
+        const { folio } = await params
+
+        const existente = await prisma.project.findUnique({ where: { folio } })
+        if (!existente) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+
+        if (existente.recordStatus !== 'borrador') {
+            return NextResponse.json(
+                { error: 'Este proyecto ya fue registrado y no se puede editar desde aquí' },
+                { status: 409 }
+            )
         }
 
         const json = await req.json()
@@ -31,10 +49,6 @@ export async function POST(req: Request) {
         }
         const data = parsed.data
 
-        // Normaliza los puntos "solo estatus": ignora cualquier
-        // responsable/días/subpuntos que haya mandado el cliente y fuerza
-        // al Administrador que registra como responsable técnico (no se
-        // expone en el formulario, es solo para satisfacer la FK).
         const mainPointsSoloEstatus = data.mainPoints.map((p) =>
             esPuntoSoloEstatus(p.mainPointKey)
                 ? { ...p, responsibleId: session.user!.id, estimatedDays: 0, children: undefined }
@@ -50,8 +64,6 @@ export async function POST(req: Request) {
             children: p.children ? rellenarResponsablesFaltantes(p.children, session.user!.id) : p.children,
         }))
 
-        // Todos los responsables (de los puntos con trabajo real) deben ser
-        // trabajadores existentes.
         const idsResponsables = new Set<string>()
         function recolectarIds(nodes: { responsibleId: string; children?: any[] }[]) {
             for (const n of nodes) {
@@ -74,21 +86,14 @@ export async function POST(req: Request) {
             )
         }
 
-        const folio = await generarFolioUnico()
-
-        // Solo los puntos con trabajo real (los primeros 4) cuentan para la
-        // fecha de entrega sugerida. Es la fecha de fin más tardía entre
-        // todos sus subpuntos (a cualquier profundidad); si aún no hay
-        // ninguna fecha capturada (ej. borrador temprano), se cae de
-        // respaldo al cálculo por suma de días hábiles.
         const puntosConTrabajo = mainPoints.filter((p) => !esPuntoSoloEstatus(p.mainPointKey))
         const estimatedDeliveryAuto =
             fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || [])) ??
             calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
 
-        const project = await prisma.project.create({
+        const project = await prisma.project.update({
+            where: { id: existente.id },
             data: {
-                folio,
                 recordStatus: data.recordStatus,
                 title: data.title,
                 clientName: data.clientName,
@@ -106,12 +111,12 @@ export async function POST(req: Request) {
                     ? new Date(data.estimatedDeliveryManual)
                     : null,
                 clientCanSeeSubpoints: data.clientCanSeeSubpoints,
-                status: 'en_proceso',
-                createdById: session.user.id,
             },
         })
 
-        await crearArbolFases(project.id, mainPoints)
+        // Se reemplaza el árbol completo: el Admin pudo haber movido,
+        // borrado o agregado subpuntos libremente mientras era borrador.
+        await reemplazarArbolFases(project.id, mainPoints)
 
         await prisma.statusHistory.create({
             data: {
@@ -119,18 +124,19 @@ export async function POST(req: Request) {
                 status: data.recordStatus === 'registrado' ? 'registrado' : 'borrador',
                 note:
                     data.recordStatus === 'registrado'
-                        ? 'Proyecto registrado en el sistema'
-                        : 'Proyecto guardado como borrador',
+                        ? 'Proyecto registrado en el sistema (editado desde borrador)'
+                        : 'Borrador actualizado',
                 changedById: session.user.id,
             },
         })
 
-        // Si se registra de forma definitiva y el cliente dejó correo,
-        // generamos el PDF y se lo mandamos por Resend. Un fallo aquí NO debe
-        // tumbar el registro (el proyecto ya se guardó bien); solo avisamos.
         let emailEnviado = false
         let emailError: string | null = null
 
+        // Como esta ruta solo se puede llamar mientras el proyecto seguía
+        // siendo borrador, si aquí llega recordStatus 'registrado' es
+        // necesariamente la primera vez que se registra -> mismo flujo de
+        // PDF + correo que al crearlo de una sola vez.
         if (data.recordStatus === 'registrado' && project.email) {
             try {
                 const pdfBuffer = await generarOrdenTrabajoPDF(project.id)
@@ -166,12 +172,9 @@ export async function POST(req: Request) {
             }
         }
 
-        return NextResponse.json(
-            { folio: project.folio, emailEnviado, emailError },
-            { status: 201 }
-        )
+        return NextResponse.json({ folio: project.folio, emailEnviado, emailError })
     } catch (error) {
         console.error(error)
-        return NextResponse.json({ error: 'Error al registrar el proyecto' }, { status: 500 })
+        return NextResponse.json({ error: 'Error al editar el proyecto' }, { status: 500 })
     }
 }

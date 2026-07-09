@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import PasswordInput from '@/components/PasswordInput'
 
 // Versión mínima para probar el flujo de auth de la Fase 0/1.
 // Se rediseñará junto con el resto del panel en fases posteriores.
@@ -63,6 +65,12 @@ export default function LoginPage() {
                     gap: '14px',
                 }}
             >
+                <div>
+                    <Link href="/" style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                        ← Volver al inicio
+                    </Link>
+                </div>
+
                 <h1 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 6px' }}>
                     Iniciar sesión
                 </h1>
@@ -92,20 +100,10 @@ export default function LoginPage() {
                     <label style={{ fontSize: '12px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
                         Contraseña
                     </label>
-                    <input
-                        type="password"
+                    <PasswordInput
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            background: 'var(--bg-input)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '10px 12px',
-                            color: 'var(--fg1)',
-                        }}
                     />
                 </div>
 
@@ -127,6 +125,18 @@ export default function LoginPage() {
                 >
                     {loading ? 'Entrando...' : 'Entrar'}
                 </button>
+
+                <Link
+                    href="/seguimiento"
+                    style={{
+                        fontSize: '13px',
+                        color: 'var(--fg2)',
+                        textDecoration: 'none',
+                        textAlign: 'center',
+                    }}
+                >
+                    ¿Eres cliente? Rastrea tu proyecto →
+                </Link>
             </form>
         </main>
     )

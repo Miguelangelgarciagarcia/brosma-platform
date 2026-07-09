@@ -31,3 +31,18 @@ export const PUNTOS_SOLO_ESTATUS: MainPointKey[] = ['listo_entrega', 'entregado'
 export function esPuntoSoloEstatus(key: string): boolean {
     return (PUNTOS_SOLO_ESTATUS as string[]).includes(key)
 }
+
+// "Guardar para seguir editando" permite subpuntos a medio llenar sin
+// responsable todavía (ver lib/validations/project.ts). Pero Phase.responsibleId
+// es una FK obligatoria en la base: no se puede insertar con ''. Como
+// respaldo técnico (solo mientras es borrador) se usa el id del Admin que
+// está guardando, igual que ya se hace para los puntos "solo estatus".
+export function rellenarResponsablesFaltantes<
+    T extends { responsibleId: string; children?: T[] }
+>(nodes: T[], fallbackId: string): T[] {
+    return nodes.map((n) => ({
+        ...n,
+        responsibleId: n.responsibleId || fallbackId,
+        children: n.children ? rellenarResponsablesFaltantes(n.children, fallbackId) : n.children,
+    }))
+}
