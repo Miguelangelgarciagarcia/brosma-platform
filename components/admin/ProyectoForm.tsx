@@ -6,7 +6,7 @@ import Link from 'next/link'
 import SignatureCanvas from 'react-signature-canvas'
 import FirmaModal from '@/components/FirmaModal'
 import SubpointEditor, { SubpointNode, nuevoSubpunto, duracionDias, nodoCompleto } from '@/components/admin/SubpointEditor'
-import { MAIN_POINTS, esPuntoSoloEstatus } from '@/lib/main-points'
+import { esPuntoSoloEstatus, CatalogoPunto } from '@/lib/main-points'
 import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
 
 type MainPointState = {
@@ -112,16 +112,23 @@ export type ProyectoFormInitialData = {
     clientCanSeeSubpoints: boolean
     clientSignature: string
     receiverSignature: string
-    mainPoints: { mainPointKey: string; responsibleId: string; children: SubpointNode[] }[]
+    // Título propio ya guardado en la fase (viene de las propias Phase del
+    // borrador, nunca del catálogo vivo — un borrador nunca se re-sincroniza
+    // con cambios posteriores del catálogo).
+    mainPoints: { mainPointKey: string; title: string; responsibleId: string; children: SubpointNode[] }[]
 }
 
 type Props = {
     mode: 'crear' | 'editar'
     folio?: string
     initial?: ProyectoFormInitialData
+    // Solo se usa en modo "crear": catálogo de puntos activos + los 2 fijos,
+    // recién leído de la base de datos por el Server Component que renderiza
+    // esta pantalla. Es una plantilla que solo se copia una vez, al crear.
+    catalogoPuntos?: CatalogoPunto[]
 }
 
-export default function ProyectoForm({ mode, folio, initial }: Props) {
+export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: Props) {
     const router = useRouter()
     const clienteSigRef = useRef<SignatureCanvas>(null)
     const receptorSigRef = useRef<SignatureCanvas>(null)
@@ -143,17 +150,27 @@ export default function ProyectoForm({ mode, folio, initial }: Props) {
         clientCanSeeSubpoints: initial?.clientCanSeeSubpoints ?? false,
     })
 
-    const [mainPoints, setMainPoints] = useState<MainPointState[]>(() =>
-        MAIN_POINTS.map((p) => {
-            const found = initial?.mainPoints.find((mp) => mp.mainPointKey === p.key)
-            return {
+    const [mainPoints, setMainPoints] = useState<MainPointState[]>(() => {
+        if (mode === 'crear') {
+            // Plantilla fresca del catálogo — se copia una sola vez aquí; a
+            // partir de este punto ya no tiene ningún vínculo con el catálogo.
+            return (catalogoPuntos ?? []).map((p) => ({
                 mainPointKey: p.key,
                 label: p.label,
-                responsibleId: found?.responsibleId ?? '',
-                children: found?.children ?? [],
-            }
-        })
-    )
+                responsibleId: '',
+                children: [],
+            }))
+        }
+        // Editar un borrador: siempre a partir de sus propias fases ya
+        // guardadas, nunca del catálogo vivo (aunque el catálogo haya
+        // cambiado desde que se creó este borrador).
+        return (initial?.mainPoints ?? []).map((mp) => ({
+            mainPointKey: mp.mainPointKey,
+            label: mp.title,
+            responsibleId: mp.responsibleId,
+            children: mp.children,
+        }))
+    })
 
     useEffect(() => {
         fetch('/api/usuarios')
@@ -295,6 +312,7 @@ export default function ProyectoForm({ mode, folio, initial }: Props) {
                 clientCanSeeSubpoints: form.clientCanSeeSubpoints,
                 mainPoints: mainPoints.map((mp) => ({
                     mainPointKey: mp.mainPointKey,
+                    title: mp.label,
                     responsibleId: mp.responsibleId || trabajadores[0]?.id || '',
                     estimatedDays: esPuntoSoloEstatus(mp.mainPointKey) ? 0 : diasCalculados(mp.children),
                     children: mp.children.length ? limpiarSubpuntosParaEnvio(mp.children) : undefined,

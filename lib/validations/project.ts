@@ -47,15 +47,15 @@ const subpointSchema: z.ZodType<SubpointInput, z.ZodTypeDef, SubpointRawInput> =
     })
 )
 
+// mainPointKey ya no es un enum fijo: el catálogo de puntos principales es
+// configurable (ver lib/main-point-catalog.ts). "listo_entrega" y
+// "entregado" siguen siendo las únicas 2 keys realmente fijas del sistema
+// (se validan aparte, abajo, como reglas de posición). El título ahora lo
+// manda el caller (viene del catálogo al crear, o del propio proyecto ya
+// guardado al editar) en vez de derivarse de una tabla fija en el código.
 const mainPointSchema = z.object({
-    mainPointKey: z.enum([
-        'planeacion',
-        'inicio_proyecto',
-        'pruebas',
-        'calidad',
-        'listo_entrega',
-        'entregado',
-    ]),
+    mainPointKey: z.string().trim().min(1),
+    title: z.string().trim().min(1).max(120),
     responsibleId: z.string().optional().default(''),
     estimatedDays: z.coerce.number().int().min(0).max(365),
     children: z.array(subpointSchema).max(200).optional(),
@@ -86,7 +86,20 @@ export const createProjectSchema = z.object({
     estimatedDeliveryManual: z.string().datetime().optional().nullable(),
     clientCanSeeSubpoints: z.boolean().default(false),
 
-    mainPoints: z.array(mainPointSchema).length(6, 'Deben venir los 6 puntos principales'),
+    // La cantidad de puntos principales ya no es fija (el catálogo es
+    // configurable), pero los últimos 2 SIEMPRE deben ser "listo_entrega" y
+    // "entregado", en ese orden exacto — esa es la única regla de forma que
+    // se mantiene fija en todo el sistema.
+    mainPoints: z
+        .array(mainPointSchema)
+        .min(3, 'Deben venir al menos 1 punto de trabajo más los 2 puntos fijos finales')
+        .refine(
+            (points) =>
+                points.length >= 2 &&
+                points[points.length - 2].mainPointKey === 'listo_entrega' &&
+                points[points.length - 1].mainPointKey === 'entregado',
+            { message: 'Los últimos 2 puntos deben ser "Listo para Entrega" y "Entregado", en ese orden' }
+        ),
 })
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>

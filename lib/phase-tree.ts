@@ -1,10 +1,14 @@
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
 import type { SubpointInput } from '@/lib/validations/project'
-import { labelDePunto } from '@/lib/main-points'
 
 type MainPointForCreate = {
     mainPointKey: string
+    // Título tal cual se debe guardar en la fase. Ya no se deriva de una
+    // tabla fija en el código (el catálogo de puntos es configurable): lo
+    // manda el caller, que lo saca del catálogo (al crear) o del propio
+    // proyecto ya guardado (al editar).
+    title: string
     responsibleId: string
     estimatedDays: number
     children?: SubpointInput[]
@@ -57,7 +61,7 @@ async function crearPuntosPrincipales(
                 depth: 0,
                 order: i,
                 mainPointKey: point.mainPointKey,
-                title: labelDePunto(point.mainPointKey),
+                title: point.title,
                 responsibleId: point.responsibleId,
                 estimatedDays: point.estimatedDays,
                 status: 'pendiente',
@@ -189,7 +193,7 @@ export async function actualizarArbolFasesPreservandoProgreso(
                         depth: 0,
                         order: i,
                         mainPointKey: point.mainPointKey,
-                        title: labelDePunto(point.mainPointKey),
+                        title: point.title,
                         responsibleId: point.responsibleId,
                         estimatedDays: point.estimatedDays,
                         status: 'pendiente',

@@ -7,7 +7,7 @@ import SignatureCanvas from 'react-signature-canvas'
 import FirmaModal from '@/components/FirmaModal'
 import ConfirmarCorreoModal from '@/components/admin/ConfirmarCorreoModal'
 import SubpointEditor, { SubpointNode, duracionDias, nodoCompleto } from '@/components/admin/SubpointEditor'
-import { MAIN_POINTS, esPuntoSoloEstatus } from '@/lib/main-points'
+import { esPuntoSoloEstatus } from '@/lib/main-points'
 import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
 import { formatDate } from '@/lib/dates'
 
@@ -111,7 +111,10 @@ export type ProyectoRegistradoFormInitialData = {
     clientCanSeeSubpoints: boolean
     clientSignature: string
     receiverSignature: string
-    mainPoints: { mainPointKey: string; responsibleId: string; status: string; children: SubpointNode[] }[]
+    // title viene de la propia fase ya guardada del proyecto — este
+    // formulario nunca se re-sincroniza con el catálogo configurable, solo
+    // trabaja con lo que el proyecto ya tiene.
+    mainPoints: { mainPointKey: string; title: string; responsibleId: string; status: string; children: SubpointNode[] }[]
 }
 
 type Props = {
@@ -142,17 +145,17 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
         clientCanSeeSubpoints: initial.clientCanSeeSubpoints,
     })
 
+    // Siempre a partir de las propias fases ya guardadas del proyecto (nunca
+    // del catálogo configurable vivo): un proyecto ya registrado no se ve
+    // afectado si el catálogo cambia después.
     const [mainPoints, setMainPoints] = useState<MainPointState[]>(() =>
-        MAIN_POINTS.map((p) => {
-            const found = initial.mainPoints.find((mp) => mp.mainPointKey === p.key)
-            return {
-                mainPointKey: p.key,
-                label: p.label,
-                responsibleId: found?.responsibleId ?? '',
-                status: found?.status ?? 'pendiente',
-                children: found?.children ?? [],
-            }
-        })
+        initial.mainPoints.map((mp) => ({
+            mainPointKey: mp.mainPointKey,
+            label: mp.title,
+            responsibleId: mp.responsibleId,
+            status: mp.status,
+            children: mp.children,
+        }))
     )
 
     useEffect(() => {
@@ -296,6 +299,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                 clientCanSeeSubpoints: form.clientCanSeeSubpoints,
                 mainPoints: mainPoints.map((mp) => ({
                     mainPointKey: mp.mainPointKey,
+                    title: mp.label,
                     responsibleId: mp.responsibleId || trabajadores[0]?.id || '',
                     estimatedDays: esPuntoSoloEstatus(mp.mainPointKey) ? 0 : diasCalculados(mp.children),
                     children: mp.children.length ? limpiarSubpuntosParaEnvio(mp.children) : undefined,

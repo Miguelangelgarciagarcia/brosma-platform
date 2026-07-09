@@ -94,7 +94,13 @@ model Project {
 
 // ---------------------------------------------------------------------------
 // Fase / Punto (árbol autorreferencial de profundidad infinita)
-// depth 0  = Punto Principal (los 6 hitos fijos, siempre visibles al cliente)
+// depth 0  = Punto Principal, siempre visible al cliente. La cantidad y
+//            nombres de estos puntos ya NO son fijos: se copian del catálogo
+//            configurable (MainPointTemplate) al momento de crear el
+//            proyecto, y desde ahí quedan totalmente independientes de ese
+//            catálogo (ver comentario de MainPointTemplate más abajo). Los
+//            últimos 2 siempre son "listo_entrega" y "entregado", en ese
+//            orden — esos sí siguen siendo fijos en todo el sistema.
 // depth 1  = Subpunto (visible al cliente solo si Project.clientCanSeeSubpoints)
 // depth 2+ = Sub-subpunto (nunca visible al cliente, solo uso interno)
 // ---------------------------------------------------------------------------
@@ -110,8 +116,10 @@ model Phase {
   depth Int // 0, 1, 2, 3...
   order Int @default(0) // orden entre hermanos
 
-  // Solo se usa en los puntos principales (depth 0) para identificar
-  // cuál de los 6 hitos fijos es: planeacion | inicio_proyecto | pruebas | calidad | listo_entrega | entregado
+  // Solo se usa en los puntos principales (depth 0). Identifica de qué punto
+  // del catálogo salió este punto al crear el proyecto (o "listo_entrega" /
+  // "entregado" para los 2 fijos). Es un snapshot: aunque el catálogo cambie
+  // después, este valor y el resto de la fase no se ven afectados.
   mainPointKey String?
 
   title       String // título corto
@@ -134,6 +142,48 @@ model Phase {
   @@index([parentId])
   @@index([responsibleId])
   @@map("phases")
+}
+
+// ---------------------------------------------------------------------------
+// Catálogo de Puntos Principales (configurable por el Admin desde
+// Configuración). Es solo una PLANTILLA que se copia al crear un proyecto
+// NUEVO: una vez creado, cada proyecto guarda sus propias Phase (depth 0) de
+// forma independiente. Editar este catálogo después (agregar, renombrar,
+// reordenar o desactivar un punto) NUNCA modifica proyectos ya existentes,
+// ni registrados ni borradores — si un borrador necesita reflejar un cambio
+// de catálogo, se cancela/elimina y se vuelve a crear (ya existe esa
+// capacidad de gestión de borradores).
+//
+// "listo_entrega" y "entregado" son las 2 filas fijas/protegidas: siempre
+// existen, siempre van al final (order muy alto), nunca se pueden borrar,
+// renombrar ni reordenar desde la UI — conservan la key literal que ya usa
+// el resto del código (esPuntoSoloEstatus, reglas de secuencia en
+// /api/fases/[id]).
+// ---------------------------------------------------------------------------
+model MainPointTemplate {
+  id String @id @default(cuid())
+
+  // Para los 2 puntos fijos: literalmente "listo_entrega" / "entregado".
+  // Para puntos configurables: un identificador opaco único, sin
+  // significado semántico, solo para identificar la fila.
+  key String @unique
+
+  label String
+  order Int
+
+  // Puntos fijos protegidos (Listo para Entrega / Entregado): no se pueden
+  // editar, reordenar ni desactivar desde la UI de Configuración.
+  fixed Boolean @default(false)
+
+  // Desactivado = ya no se ofrece para proyectos nuevos, pero se conserva el
+  // registro (nunca se borra de verdad). No afecta proyectos existentes, que
+  // ya tienen su propia copia guardada en sus Phase.
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("main_point_templates")
 }
 
 // ---------------------------------------------------------------------------

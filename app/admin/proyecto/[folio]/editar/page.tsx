@@ -73,6 +73,7 @@ export default async function EditarProyectoPage({
         .sort((a, b) => a.order - b.order)
         .map((mp) => ({
             mainPointKey: mp.mainPointKey || '',
+            title: mp.title,
             responsibleId: esPuntoSoloEstatus(mp.mainPointKey || '') ? '' : mp.responsibleId,
             children: buildSubpointTree(phases, mp.id),
         }))

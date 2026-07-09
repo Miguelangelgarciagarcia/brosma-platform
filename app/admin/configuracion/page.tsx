@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AdminNav from '@/components/admin/AdminNav'
 import UserForm from '@/components/admin/UserForm'
+import MainPointCatalogManager from '@/components/admin/MainPointCatalogManager'
 import { formatDate } from '@/lib/dates'
+import { obtenerCatalogoCompleto } from '@/lib/main-point-catalog'
 
 export default async function ConfiguracionPage() {
     const session = await auth()
@@ -15,6 +17,8 @@ export default async function ConfiguracionPage() {
         select: { id: true, name: true, email: true, role: true, createdAt: true },
         orderBy: { createdAt: 'asc' },
     })
+
+    const catalogoPuntos = await obtenerCatalogoCompleto()
 
     return (
         <main style={{ minHeight: '100vh' }}>
@@ -106,6 +110,13 @@ export default async function ConfiguracionPage() {
                             ))}
                         </div>
                     </div>
+                </div>
+
+                <div>
+                    <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '10px' }}>
+                        Puntos principales de proyectos nuevos
+                    </h2>
+                    <MainPointCatalogManager initial={catalogoPuntos} />
                 </div>
             </div>
         </main>
