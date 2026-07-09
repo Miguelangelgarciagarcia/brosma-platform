@@ -1,6 +1,7 @@
-import { auth, signOut } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import AdminHeader from '@/components/admin/AdminHeader'
 import AdminNav from '@/components/admin/AdminNav'
 import HistorialCard from '@/components/admin/HistorialCard'
 
@@ -40,41 +41,14 @@ export default async function HistorialPage({
     })
 
     return (
-        <main style={{ minHeight: '100vh' }}>
-            <div
-                style={{
-                    borderBottom: '1px solid var(--border-subtle)',
-                    padding: '14px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--fg2)' }}>
-                        {session.user?.name} · {session.user?.role}
-                    </span>
-                    <form
-                        action={async () => {
-                            'use server'
-                            await signOut({ redirectTo: '/login' })
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            style={{ fontSize: '12px', color: 'var(--fg2)', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                            Salir
-                        </button>
-                    </form>
-                </div>
-            </div>
-
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
+            <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
             <AdminNav />
 
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Historial de entregados</h1>
+                <h1 style={{ fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg)' }}>
+                    Historial de entregados
+                </h1>
 
                 <form method="GET" style={{ display: 'flex', gap: '8px' }}>
                     <input
@@ -85,23 +59,25 @@ export default async function HistorialPage({
                         style={{
                             flex: 1,
                             boxSizing: 'border-box',
-                            background: 'var(--bg-input)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-sm)',
+                            background: 'var(--brand-panel-card)',
+                            border: '1px solid var(--brand-panel-border)',
+                            borderRadius: '6px',
                             padding: '10px 14px',
-                            color: 'var(--fg1)',
+                            color: 'var(--brand-panel-fg)',
+                            fontFamily: 'var(--font-body)',
                             fontSize: '14px',
                         }}
                     />
                     <button
                         type="submit"
                         style={{
-                            background: 'var(--accent)',
+                            background: 'var(--brand-orange)',
                             color: '#fff',
                             border: 'none',
-                            borderRadius: 'var(--radius-sm)',
+                            borderRadius: '6px',
                             padding: '0 18px',
-                            fontWeight: 600,
+                            fontFamily: 'var(--font-body)',
+                            fontWeight: 700,
                             cursor: 'pointer',
                         }}
                     >
@@ -112,12 +88,13 @@ export default async function HistorialPage({
                 {entregados.length === 0 ? (
                     <div
                         style={{
-                            background: 'var(--bg-card)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--brand-panel-card)',
+                            border: '1px solid var(--brand-panel-border)',
+                            borderRadius: '10px',
                             padding: '40px',
                             textAlign: 'center',
-                            color: 'var(--fg3)',
+                            color: 'var(--brand-panel-fg3)',
+                            fontFamily: 'var(--font-body)',
                             fontSize: '13px',
                         }}
                     >

@@ -41,9 +41,9 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                 style={{
                     display: 'flex',
                     gap: '4px',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-default)',
-                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--brand-panel-input)',
+                    border: '1px solid var(--brand-panel-border)',
+                    borderRadius: '10px',
                     padding: '4px',
                     marginBottom: '14px',
                 }}
@@ -53,14 +53,15 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     onClick={() => setTab('pendientes')}
                     style={{
                         flex: 1,
+                        fontFamily: 'var(--font-body)',
                         fontSize: '13px',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         padding: '8px',
-                        borderRadius: 'var(--radius-sm)',
+                        borderRadius: '6px',
                         border: 'none',
                         cursor: 'pointer',
-                        background: tab === 'pendientes' ? 'var(--accent)' : 'none',
-                        color: tab === 'pendientes' ? '#fff' : 'var(--fg2)',
+                        background: tab === 'pendientes' ? 'var(--brand-orange)' : 'none',
+                        color: tab === 'pendientes' ? '#fff' : 'var(--brand-panel-fg2)',
                     }}
                 >
                     Pendientes ({totalPendientes})
@@ -70,14 +71,15 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     onClick={() => setTab('finalizados')}
                     style={{
                         flex: 1,
+                        fontFamily: 'var(--font-body)',
                         fontSize: '13px',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         padding: '8px',
-                        borderRadius: 'var(--radius-sm)',
+                        borderRadius: '6px',
                         border: 'none',
                         cursor: 'pointer',
-                        background: tab === 'finalizados' ? 'var(--accent)' : 'none',
-                        color: tab === 'finalizados' ? '#fff' : 'var(--fg2)',
+                        background: tab === 'finalizados' ? 'var(--brand-orange)' : 'none',
+                        color: tab === 'finalizados' ? '#fff' : 'var(--brand-panel-fg2)',
                     }}
                 >
                     Finalizados ({totalCompletados})
@@ -87,12 +89,13 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
             {grupos.length === 0 ? (
                 <div
                     style={{
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border-default)',
-                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--brand-panel-card)',
+                        border: '1px solid var(--brand-panel-border)',
+                        borderRadius: '10px',
                         padding: '24px',
                         textAlign: 'center',
-                        color: 'var(--fg3)',
+                        color: 'var(--brand-panel-fg3)',
+                        fontFamily: 'var(--font-body)',
                         fontSize: '13px',
                     }}
                 >

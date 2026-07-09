@@ -19,8 +19,9 @@ export default function AdminNav() {
             style={{
                 display: 'flex',
                 gap: '4px',
-                padding: '10px 20px',
-                borderBottom: '1px solid var(--border-subtle)',
+                padding: '10px 16px',
+                background: 'var(--brand-panel-bg)',
+                borderBottom: '1px solid var(--brand-panel-border)',
                 overflowX: 'auto',
             }}
         >
@@ -31,14 +32,15 @@ export default function AdminNav() {
                         key={link.href}
                         href={link.href}
                         style={{
+                            fontFamily: 'var(--font-body)',
                             fontSize: '13px',
                             padding: '8px 14px',
-                            borderRadius: 'var(--radius-sm)',
+                            borderRadius: '4px',
                             textDecoration: 'none',
                             whiteSpace: 'nowrap',
-                            color: active ? '#fff' : 'var(--fg2)',
-                            background: active ? 'var(--accent)' : 'transparent',
-                            fontWeight: active ? 600 : 400,
+                            color: active ? '#ffffff' : 'var(--brand-panel-fg2)',
+                            background: active ? 'var(--brand-orange)' : 'transparent',
+                            fontWeight: active ? 700 : 500,
                         }}
                     >
                         {link.label}

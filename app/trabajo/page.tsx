@@ -85,20 +85,26 @@ export default async function TrabajoPage() {
     const completadosPorProyecto = agruparPorProyecto(completados)
 
     return (
-        <main style={{ minHeight: '100vh' }}>
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <div
                 style={{
-                    borderBottom: '1px solid var(--border-subtle)',
+                    background: 'var(--brand-navy-deep)',
+                    borderBottom: '1px solid var(--brand-panel-border)',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}
             >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                        GRUPO BROSMA
+                    </div>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--fg2)' }}>{session.user?.name}</span>
-                    <Link href="/cuenta" style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>{session.user?.name}</span>
+                    <Link href="/cuenta" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
                         Mi cuenta
                     </Link>
                     <form
@@ -109,7 +115,14 @@ export default async function TrabajoPage() {
                     >
                         <button
                             type="submit"
-                            style={{ fontSize: '12px', color: 'var(--fg2)', background: 'none', border: 'none', cursor: 'pointer' }}
+                            style={{
+                                fontFamily: 'var(--font-body)',
+                                fontSize: '12px',
+                                color: 'var(--brand-panel-fg2)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
                         >
                             Salir
                         </button>
@@ -119,27 +132,28 @@ export default async function TrabajoPage() {
 
             <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
                 <div>
-                    <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px' }}>
+                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', color: '#ffffff', margin: '0 0 4px' }}>
                         ¡Bienvenido, {session.user?.name?.split(' ')[0]}!
                     </h1>
-                    <p style={{ fontSize: '13px', color: 'var(--fg3)', margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                         Esto es lo que tienes en puerta hoy.
                     </p>
                 </div>
 
                 <div>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '10px' }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '10px' }}>
                         Corriendo hoy ({carrusel.length})
                     </h2>
                     {carrusel.length === 0 ? (
                         <div
                             style={{
-                                background: 'var(--bg-card)',
-                                border: '1px solid var(--border-default)',
-                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--brand-panel-card)',
+                                border: '1px solid var(--brand-panel-border)',
+                                borderRadius: '10px',
                                 padding: '20px',
                                 textAlign: 'center',
-                                color: 'var(--fg3)',
+                                color: 'var(--brand-panel-fg3)',
+                                fontFamily: 'var(--font-body)',
                                 fontSize: '13px',
                             }}
                         >

@@ -6,12 +6,21 @@ import { useRouter } from 'next/navigation'
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-sm)',
+    background: 'var(--brand-panel-input)',
+    border: '1px solid var(--brand-panel-border)',
+    borderRadius: '6px',
     padding: '10px 12px',
-    color: 'var(--fg1)',
+    color: 'var(--brand-panel-fg)',
+    fontFamily: 'var(--font-body)',
     fontSize: '14px',
+}
+
+const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-body)',
+    fontSize: '11px',
+    color: 'var(--brand-panel-fg2)',
+    display: 'block',
+    marginBottom: '4px',
 }
 
 export default function UserForm() {
@@ -54,68 +63,76 @@ export default function UserForm() {
         <form
             onSubmit={onSubmit}
             style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-lg)',
+                background: 'var(--brand-panel-card)',
+                border: '1px solid var(--brand-panel-border)',
+                borderRadius: '12px',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
             }}
         >
-            <h2 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>Nueva cuenta</h2>
+            <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg)' }}>
+                Nueva cuenta
+            </h2>
 
             <div>
-                <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                    Nombre
-                </label>
-                <input required value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
+                <label style={labelStyle}>Nombre</label>
+                <input required value={name} onChange={(e) => setName(e.target.value)} className="brand-panel-input" style={inputStyle} />
             </div>
 
             <div>
-                <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                    Correo
-                </label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+                <label style={labelStyle}>Correo</label>
+                <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="brand-panel-input"
+                    style={inputStyle}
+                />
             </div>
 
             <div>
-                <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                    Contraseña temporal (mínimo 8 caracteres)
-                </label>
+                <label style={labelStyle}>Contraseña temporal (mínimo 8 caracteres)</label>
                 <input
                     type="text"
                     required
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="brand-panel-input"
                     style={{ ...inputStyle, fontFamily: 'monospace' }}
                 />
             </div>
 
             <div>
-                <label style={{ fontSize: '11px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                    Rol
-                </label>
-                <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'trabajador')} style={inputStyle}>
+                <label style={labelStyle}>Rol</label>
+                <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as 'admin' | 'trabajador')}
+                    className="brand-panel-input"
+                    style={inputStyle}
+                >
                     <option value="trabajador">Trabajador</option>
                     <option value="admin">Admin</option>
                 </select>
             </div>
 
-            {error && <p style={{ color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
-            {ok && <p style={{ color: 'var(--accent-hover)', fontSize: '13px', margin: 0 }}>{ok}</p>}
+            {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {ok && <p style={{ fontFamily: 'var(--font-body)', color: 'var(--brand-orange)', fontSize: '13px', margin: 0 }}>{ok}</p>}
 
             <button
                 type="submit"
                 disabled={loading}
                 style={{
-                    background: 'var(--accent)',
+                    background: 'var(--brand-orange)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '6px',
                     padding: '12px',
-                    fontWeight: 600,
+                    fontFamily: 'var(--font-body)',
+                    fontWeight: 700,
                     cursor: 'pointer',
                     opacity: loading ? 0.6 : 1,
                 }}

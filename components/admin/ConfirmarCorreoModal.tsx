@@ -47,8 +47,8 @@ export default function ConfirmarCorreoModal({
         >
             <div
                 style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-default)',
+                    background: 'var(--brand-panel-card)',
+                    border: '1px solid var(--brand-panel-border)',
                     borderRadius: '16px',
                     width: '100%',
                     maxWidth: '480px',
@@ -59,8 +59,10 @@ export default function ConfirmarCorreoModal({
                 }}
             >
                 <div>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 700 }}>{titulo}</h3>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--fg2)' }}>
+                    <h3 style={{ fontFamily: 'var(--font-body)', margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                        {titulo}
+                    </h3>
+                    <p style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>
                         {descripcion ??
                             `¿Quieres avisarle al cliente (${destinatario || 'sin correo registrado'})? Puedes revisar o editar el mensaje antes de mandarlo.`}
                     </p>
@@ -70,17 +72,18 @@ export default function ConfirmarCorreoModal({
                     value={mensaje}
                     onChange={(e) => onChangeMensaje(e.target.value)}
                     rows={8}
+                    className="brand-panel-input"
                     style={{
                         width: '100%',
                         boxSizing: 'border-box',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-default)',
-                        borderRadius: 'var(--radius-sm)',
+                        background: 'var(--brand-panel-input)',
+                        border: '1px solid var(--brand-panel-border)',
+                        borderRadius: '6px',
                         padding: '10px 12px',
-                        color: 'var(--fg1)',
+                        color: 'var(--brand-panel-fg)',
                         fontSize: '13px',
                         resize: 'vertical',
-                        fontFamily: 'inherit',
+                        fontFamily: 'var(--font-body)',
                     }}
                 />
 
@@ -91,11 +94,12 @@ export default function ConfirmarCorreoModal({
                         disabled={enviando}
                         style={{
                             flex: 1,
-                            border: '1px solid var(--border-default)',
-                            color: 'var(--fg2)',
+                            fontFamily: 'var(--font-body)',
+                            border: '1px solid var(--brand-panel-border)',
+                            color: 'var(--brand-panel-fg2)',
                             background: 'none',
                             padding: '10px',
-                            borderRadius: 'var(--radius-sm)',
+                            borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '13px',
                         }}
@@ -108,11 +112,12 @@ export default function ConfirmarCorreoModal({
                         disabled={enviando}
                         style={{
                             flex: 1,
-                            border: '1px solid var(--border-default)',
-                            color: 'var(--fg1)',
-                            background: 'var(--bg-input)',
+                            fontFamily: 'var(--font-body)',
+                            border: '1px solid var(--brand-panel-border)',
+                            color: 'var(--brand-panel-fg)',
+                            background: 'var(--brand-panel-input)',
                             padding: '10px',
-                            borderRadius: 'var(--radius-sm)',
+                            borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '13px',
                         }}
@@ -125,14 +130,15 @@ export default function ConfirmarCorreoModal({
                         disabled={enviando || !destinatario}
                         style={{
                             flex: 1,
+                            fontFamily: 'var(--font-body)',
                             border: 'none',
                             color: '#fff',
-                            background: 'var(--accent)',
+                            background: 'var(--brand-orange)',
                             padding: '10px',
-                            borderRadius: 'var(--radius-sm)',
+                            borderRadius: '6px',
                             cursor: destinatario ? 'pointer' : 'not-allowed',
                             fontSize: '13px',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             opacity: enviando ? 0.6 : 1,
                         }}
                     >

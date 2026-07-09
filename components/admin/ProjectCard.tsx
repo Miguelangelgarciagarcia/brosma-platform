@@ -19,39 +19,62 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     return (
         <Link
             href={`/admin/proyecto/${project.folio}`}
+            className="brand-panel-card"
             style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 gap: '12px',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-md)',
+                background: 'var(--brand-panel-card)',
+                border: '1px solid var(--brand-panel-border)',
+                borderRadius: '10px',
                 padding: '14px 16px',
                 textDecoration: 'none',
-                color: 'var(--fg1)',
+                color: 'var(--brand-panel-fg)',
+                transition: 'background 0.15s ease, border-color 0.15s ease',
             }}
         >
             <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '11px', color: 'var(--accent-hover)', fontFamily: 'monospace', marginBottom: '4px' }}>
+                <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--brand-orange)', marginBottom: '4px' }}>
                     {project.folio}
                     {project.recordStatus === 'borrador' && (
-                        <span style={{ marginLeft: '8px', color: '#e0a020' }}>· borrador</span>
+                        <span style={{ marginLeft: '8px', color: 'var(--brand-panel-fg3)', fontFamily: 'var(--font-body)' }}>
+                            · borrador
+                        </span>
                     )}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
                     {project.title}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--fg2)' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>
                     {project.clientName}
                     {project.company ? ` · ${project.company}` : ''}
                 </div>
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: '10px', color: 'var(--fg3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <div
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '10px',
+                        color: 'var(--brand-panel-fg3)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                    }}
+                >
                     Entrega estimada
                 </div>
-                <div style={{ fontSize: '13px' }}>{formatDate(entrega)}</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
+                    {formatDate(entrega)}
+                </div>
             </div>
         </Link>
     )

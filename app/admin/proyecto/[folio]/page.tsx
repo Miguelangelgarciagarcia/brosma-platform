@@ -63,29 +63,49 @@ export default async function ProyectoDetallePage({
     const tree = buildTree(project.phases as any)
     const entrega = project.estimatedDeliveryManual ?? project.estimatedDeliveryAuto
 
+    const actionLinkStyle: React.CSSProperties = {
+        fontFamily: 'var(--font-body)',
+        fontSize: '12px',
+        color: '#ffffff',
+        background: 'var(--brand-orange)',
+        borderRadius: '6px',
+        padding: '8px 14px',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap',
+        fontWeight: 700,
+    }
+
     return (
-        <main style={{ minHeight: '100vh' }}>
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <div
                 style={{
-                    borderBottom: '1px solid var(--border-subtle)',
+                    background: 'var(--brand-navy-deep)',
+                    borderBottom: '1px solid var(--brand-panel-border)',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}
             >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
-                <Link href="/admin" style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                        GRUPO BROSMA
+                    </div>
+                </div>
+                <Link href="/admin" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
                     ← Volver
                 </Link>
             </div>
 
             <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
                     <div>
-                        <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--accent-hover)' }}>{project.folio}</div>
-                        <h1 style={{ fontSize: '20px', fontWeight: 700, margin: '4px 0' }}>{project.title}</h1>
-                        <div style={{ fontSize: '13px', color: 'var(--fg2)' }}>
+                        <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--brand-orange)' }}>{project.folio}</div>
+                        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#ffffff', margin: '4px 0' }}>
+                            {project.title}
+                        </h1>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg2)' }}>
                             {project.clientName}
                             {project.company ? ` · ${project.company}` : ''} · {project.phone}
                             {project.email ? ` · ${project.email}` : ''}
@@ -93,36 +113,12 @@ export default async function ProyectoDetallePage({
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                         {project.recordStatus === 'borrador' && (
-                            <Link
-                                href={`/admin/proyecto/${project.folio}/editar`}
-                                style={{
-                                    fontSize: '12px',
-                                    color: '#fff',
-                                    background: 'var(--accent)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    padding: '8px 14px',
-                                    textDecoration: 'none',
-                                    whiteSpace: 'nowrap',
-                                    fontWeight: 600,
-                                }}
-                            >
+                            <Link href={`/admin/proyecto/${project.folio}/editar`} style={actionLinkStyle}>
                                 Editar
                             </Link>
                         )}
                         {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
-                            <Link
-                                href={`/admin/proyecto/${project.folio}/editar-registrado`}
-                                style={{
-                                    fontSize: '12px',
-                                    color: '#fff',
-                                    background: 'var(--accent)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    padding: '8px 14px',
-                                    textDecoration: 'none',
-                                    whiteSpace: 'nowrap',
-                                    fontWeight: 600,
-                                }}
-                            >
+                            <Link href={`/admin/proyecto/${project.folio}/editar-registrado`} style={actionLinkStyle}>
                                 Editar
                             </Link>
                         )}
@@ -132,10 +128,11 @@ export default async function ProyectoDetallePage({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
+                                    fontFamily: 'var(--font-body)',
                                     fontSize: '12px',
-                                    color: 'var(--accent-hover)',
-                                    border: '1px solid var(--border-default)',
-                                    borderRadius: 'var(--radius-sm)',
+                                    color: 'var(--brand-panel-fg)',
+                                    border: '1px solid var(--brand-panel-border)',
+                                    borderRadius: '6px',
                                     padding: '8px 14px',
                                     textDecoration: 'none',
                                     whiteSpace: 'nowrap',
@@ -152,28 +149,28 @@ export default async function ProyectoDetallePage({
                         display: 'grid',
                         gridTemplateColumns: '1fr 1fr 1fr',
                         gap: '10px',
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border-default)',
-                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--brand-panel-card)',
+                        border: '1px solid var(--brand-panel-border)',
+                        borderRadius: '10px',
                         padding: '14px',
                     }}
                 >
                     <div>
-                        <div style={{ fontSize: '10px', color: 'var(--fg3)' }}>ESTATUS</div>
-                        <div style={{ fontSize: '13px' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>ESTATUS</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
                             {project.recordStatus} · {project.status}
                         </div>
                     </div>
                     <div>
-                        <div style={{ fontSize: '10px', color: 'var(--fg3)' }}>ENTREGA ESTIMADA</div>
-                        <div style={{ fontSize: '13px' }}>{formatDate(entrega)}</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>ENTREGA ESTIMADA</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>{formatDate(entrega)}</div>
                     </div>
                     <div>
-                        <div style={{ fontSize: '10px', color: 'var(--fg3)' }}>PAGO</div>
-                        <div style={{ fontSize: '13px' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>PAGO</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
                             {project.paymentStatus === 'pagado' && (
                                 <>
-                                    <strong style={{ color: 'var(--accent-hover)' }}>PAGADO</strong>
+                                    <strong style={{ color: 'var(--brand-orange)' }}>PAGADO</strong>
                                     {project.cost != null && ` · $${formatMonto(project.cost)}`}
                                 </>
                             )}
@@ -189,18 +186,18 @@ export default async function ProyectoDetallePage({
                 </div>
 
                 {project.notes && (
-                    <div style={{ fontSize: '13px', color: 'var(--fg2)' }}>
-                        <strong style={{ color: 'var(--fg1)' }}>Notas: </strong>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg2)' }}>
+                        <strong style={{ color: 'var(--brand-panel-fg)' }}>Notas: </strong>
                         {project.notes}
                     </div>
                 )}
 
                 <div>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '4px' }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '4px' }}>
                         Fases del proyecto
                     </h2>
                     {project.recordStatus === 'borrador' && (
-                        <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: '0 0 8px' }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: '0 0 8px' }}>
                             "Listo para Entrega" y "Entregado" no se muestran todavía: son banderas de estatus que
                             solo aplican una vez registrado el proyecto.
                         </p>

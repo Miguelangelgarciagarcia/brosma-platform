@@ -1,7 +1,8 @@
-import { auth, signOut } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import AdminHeader from '@/components/admin/AdminHeader'
 import AdminNav from '@/components/admin/AdminNav'
 import UserForm from '@/components/admin/UserForm'
 import MainPointCatalogManager from '@/components/admin/MainPointCatalogManager'
@@ -21,52 +22,28 @@ export default async function ConfiguracionPage() {
     const catalogoPuntos = await obtenerCatalogoCompleto()
 
     return (
-        <main style={{ minHeight: '100vh' }}>
-            <div
-                style={{
-                    borderBottom: '1px solid var(--border-subtle)',
-                    padding: '14px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--fg2)' }}>
-                        {session.user?.name} · {session.user?.role}
-                    </span>
-                    <form
-                        action={async () => {
-                            'use server'
-                            await signOut({ redirectTo: '/login' })
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            style={{ fontSize: '12px', color: 'var(--fg2)', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                            Salir
-                        </button>
-                    </form>
-                </div>
-            </div>
-
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
+            <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
             <AdminNav />
 
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Configuración</h1>
-                    <Link href="/cuenta" style={{ fontSize: '12px', color: 'var(--accent-hover)', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <h1 style={{ fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg)' }}>
+                        Configuración
+                    </h1>
+                    <Link href="/cuenta" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
                         Cambiar mi contraseña →
                     </Link>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '20px', alignItems: 'start' }}>
+                {/* auto-fit + minmax en vez de columnas fijas: en pantallas
+                    angostas (celular) las dos columnas se apilan solas, sin
+                    necesidad de una media query aparte. */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
                     <UserForm />
 
                     <div>
-                        <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '10px' }}>
+                        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '10px' }}>
                             Cuentas existentes ({usuarios.length})
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -78,31 +55,44 @@ export default async function ConfiguracionPage() {
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
                                         gap: '10px',
-                                        background: 'var(--bg-card)',
-                                        border: '1px solid var(--border-default)',
-                                        borderRadius: 'var(--radius-md)',
+                                        background: 'var(--brand-panel-card)',
+                                        border: '1px solid var(--brand-panel-border)',
+                                        borderRadius: '10px',
                                         padding: '12px 14px',
                                     }}
                                 >
                                     <div style={{ minWidth: 0 }}>
-                                        <div style={{ fontSize: '13px', fontWeight: 600 }}>{u.name}</div>
-                                        <div style={{ fontSize: '12px', color: 'var(--fg2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                                            {u.name}
+                                        </div>
+                                        <div
+                                            style={{
+                                                fontFamily: 'var(--font-body)',
+                                                fontSize: '12px',
+                                                color: 'var(--brand-panel-fg2)',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
                                             {u.email}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                         <span
                                             style={{
+                                                fontFamily: 'var(--font-body)',
                                                 fontSize: '10px',
+                                                fontWeight: 700,
                                                 padding: '2px 8px',
                                                 borderRadius: '999px',
-                                                background: u.role === 'admin' ? 'rgba(47,111,237,0.15)' : 'rgba(255,255,255,0.06)',
-                                                color: u.role === 'admin' ? 'var(--accent-hover)' : 'var(--fg3)',
+                                                background: u.role === 'admin' ? 'rgba(244,123,48,0.15)' : 'rgba(255,255,255,0.06)',
+                                                color: u.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-panel-fg3)',
                                             }}
                                         >
                                             {u.role}
                                         </span>
-                                        <div style={{ fontSize: '10px', color: 'var(--fg3)', marginTop: '4px' }}>
+                                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)', marginTop: '4px' }}>
                                             desde {formatDate(u.createdAt)}
                                         </div>
                                     </div>
@@ -113,7 +103,7 @@ export default async function ConfiguracionPage() {
                 </div>
 
                 <div>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg2)', marginBottom: '10px' }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '10px' }}>
                         Puntos principales de proyectos nuevos
                     </h2>
                     <MainPointCatalogManager initial={catalogoPuntos} />

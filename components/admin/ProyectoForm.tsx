@@ -49,25 +49,28 @@ function validarSubpuntosCompletos(nodes: SubpointNode[], pathLabel: string): st
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-sm)',
+    background: 'var(--brand-panel-input)',
+    border: '1px solid var(--brand-panel-border)',
+    borderRadius: '6px',
     padding: '10px 12px',
-    color: 'var(--fg1)',
+    color: 'var(--brand-panel-fg)',
+    fontFamily: 'var(--font-body)',
     fontSize: '13px',
+    transition: 'border-color 0.15s ease, background 0.15s ease',
 }
 
 const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-body)',
     fontSize: '11px',
-    color: 'var(--fg2)',
+    color: 'var(--brand-panel-fg2)',
     display: 'block',
     marginBottom: '4px',
 }
 
 const sectionStyle: React.CSSProperties = {
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-md)',
+    background: 'var(--brand-panel-card)',
+    border: '1px solid var(--brand-panel-border)',
+    borderRadius: '10px',
     padding: '18px',
     display: 'flex',
     flexDirection: 'column',
@@ -362,52 +365,69 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
     const volverHref = mode === 'editar' && folio ? `/admin/proyecto/${folio}` : '/admin'
 
     return (
-        <main style={{ minHeight: '100vh' }}>
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <div
                 style={{
-                    borderBottom: '1px solid var(--border-subtle)',
+                    background: 'var(--brand-navy-deep)',
+                    borderBottom: '1px solid var(--brand-panel-border)',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}
             >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
-                <Link href={volverHref} style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                        GRUPO BROSMA
+                    </div>
+                </div>
+                <Link href={volverHref} style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
                     ← Volver
                 </Link>
             </div>
 
             <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#ffffff', margin: 0 }}>
                     {mode === 'editar' ? `Editar proyecto ${folio}` : 'Nuevo proyecto'}
                 </h1>
 
                 {mode === 'editar' && (
-                    <p style={{ fontSize: '12px', color: '#e0a020', margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: '#e0a020', margin: 0 }}>
                         Este proyecto sigue como borrador. Puedes seguir editándolo o registrarlo definitivamente
                         desde aquí. Una vez registrado, ya no se podrá editar desde esta pantalla.
                     </p>
                 )}
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos generales</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos generales
+                    </h2>
                     <div>
                         <label style={labelStyle}>Descripción breve del proyecto *</label>
-                        <input name="title" value={form.title} onChange={handleChange} placeholder="Molde para tapa de envase 500ml" style={inputStyle} />
+                        <input
+                            name="title"
+                            value={form.title}
+                            onChange={handleChange}
+                            placeholder="Molde para tapa de envase 500ml"
+                            className="brand-panel-input"
+                            style={inputStyle}
+                        />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos del cliente</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos del cliente
+                    </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Nombre completo *</label>
-                            <input name="clientName" value={form.clientName} onChange={handleChange} style={inputStyle} />
+                            <input name="clientName" value={form.clientName} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Empresa *</label>
-                            <input name="company" value={form.company} onChange={handleChange} style={inputStyle} />
+                            <input name="company" value={form.company} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Teléfono *</label>
@@ -417,6 +437,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                 onChange={handlePhoneChange}
                                 inputMode="numeric"
                                 placeholder="10 dígitos"
+                                className="brand-panel-input"
                                 style={inputStyle}
                             />
                         </div>
@@ -427,13 +448,14 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                 type="email"
                                 value={form.email}
                                 onChange={handleChange}
+                                className="brand-panel-input"
                                 style={{
                                     ...inputStyle,
-                                    border: `1px solid ${emailValido ? 'var(--border-default)' : '#ff6b6b'}`,
+                                    border: `1px solid ${emailValido ? 'var(--brand-panel-border)' : '#ff6b6b'}`,
                                 }}
                             />
                             {!emailValido && (
-                                <p style={{ color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>
+                                <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>
                                     Correo con formato inválido
                                 </p>
                             )}
@@ -442,7 +464,9 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos financieros</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos financieros
+                    </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Costo</label>
@@ -452,6 +476,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                 value={form.cost}
                                 onChange={handleCostChange}
                                 placeholder="0.00"
+                                className="brand-panel-input"
                                 style={inputStyle}
                             />
                         </div>
@@ -464,6 +489,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                 onChange={handleAdvanceChange}
                                 disabled={!costoValido}
                                 placeholder={costoValido ? '0.00' : 'Primero coloca el costo'}
+                                className="brand-panel-input"
                                 style={{
                                     ...inputStyle,
                                     opacity: costoValido ? 1 : 0.5,
@@ -484,22 +510,23 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                             >
                                 <span
                                     style={{
+                                        fontFamily: 'var(--font-body)',
                                         fontSize: '11px',
-                                        fontWeight: 600,
+                                        fontWeight: 700,
                                         padding: '4px 10px',
                                         borderRadius: '999px',
                                         background:
                                             paymentStatus === 'pagado'
-                                                ? 'rgba(47,111,237,0.15)'
+                                                ? 'rgba(2,39,58,0.35)'
                                                 : paymentStatus === 'anticipo'
-                                                ? 'rgba(224,160,32,0.15)'
+                                                ? 'rgba(244,123,48,0.15)'
                                                 : 'rgba(255,255,255,0.06)',
                                         color:
                                             paymentStatus === 'pagado'
-                                                ? 'var(--accent-hover)'
+                                                ? '#ffffff'
                                                 : paymentStatus === 'anticipo'
-                                                ? '#e0a020'
-                                                : 'var(--fg3)',
+                                                ? 'var(--brand-orange)'
+                                                : 'var(--brand-panel-fg3)',
                                     }}
                                 >
                                     {paymentStatus === 'pagado' ? 'Pagado' : paymentStatus === 'anticipo' ? 'Anticipo' : 'Pendiente'}
@@ -507,26 +534,35 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                             </div>
                         </div>
                     </div>
-                    <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                         El estatus se calcula solo a partir del costo y el adelanto: sin adelanto es "Pendiente",
                         adelanto igual al costo es "Pagado", cualquier otro adelanto mayor a cero es "Anticipo".
                     </p>
                     <div>
                         <label style={labelStyle}>Notas</label>
-                        <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+                        <textarea
+                            name="notes"
+                            value={form.notes}
+                            onChange={handleChange}
+                            rows={3}
+                            className="brand-panel-input"
+                            style={{ ...inputStyle, resize: 'vertical' as const }}
+                        />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Puntos principales y fases</h2>
-                    <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: 0 }}>
-                        Solo se configuran aquí los primeros 4 puntos (Planeación, Inicio de Proyecto, Pruebas,
-                        Calidad). "Listo para Entrega" y "Entregado" son banderas de estatus que se marcan después,
-                        directo desde el detalle del proyecto.
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Puntos principales y fases
+                    </h2>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                        Aquí se configuran los puntos de trabajo del catálogo (ver Configuración). "Listo para
+                        Entrega" y "Entregado" son banderas de estatus que se marcan después, directo desde el
+                        detalle del proyecto.
                     </p>
 
                     {trabajadores.length === 0 && (
-                        <p style={{ fontSize: '12px', color: '#e0a020', margin: 0 }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: '#e0a020', margin: 0 }}>
                             No hay trabajadores dados de alta todavía. Necesitas al menos uno para asignar
                             responsables (créalos desde Configuración).
                         </p>
@@ -540,15 +576,15 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                 <div
                                     key={mp.mainPointKey}
                                     style={{
-                                        border: '1px solid var(--border-default)',
-                                        borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--brand-panel-border)',
+                                        borderRadius: '10px',
                                         padding: '12px',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: '10px',
                                     }}
                                 >
-                                    <div style={{ fontWeight: 600, fontSize: '13px' }}>
+                                    <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
                                         {index + 1}. {mp.label}
                                     </div>
 
@@ -556,6 +592,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                         <select
                                             value={mp.responsibleId}
                                             onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
+                                            className="brand-panel-input"
                                             style={inputStyle}
                                         >
                                             <option value="">Responsable...</option>
@@ -572,14 +609,14 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 background: 'transparent',
-                                                color: 'var(--fg2)',
+                                                color: 'var(--brand-panel-fg2)',
                                             }}
                                         >
                                             <span>Días estimados</span>
-                                            <strong style={{ color: 'var(--fg1)' }}>{dias}</strong>
+                                            <strong style={{ color: 'var(--brand-panel-fg)' }}>{dias}</strong>
                                         </div>
                                     </div>
-                                    <p style={{ fontSize: '10px', color: 'var(--fg3)', margin: 0 }}>
+                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                                         Se calcula solo con la suma de los rangos de fecha de los subpuntos 1er nivel
                                         de abajo — agrégalos con sus fechas para que este número aparezca.
                                     </p>
@@ -596,7 +633,16 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                         })}
                     </div>
 
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--fg2)' }}>
+                    <label
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            color: 'var(--brand-panel-fg2)',
+                        }}
+                    >
                         <input
                             type="checkbox"
                             checked={form.clientCanSeeSubpoints}
@@ -607,16 +653,16 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
 
                     <div
                         style={{
-                            background: 'rgba(47,111,237,0.08)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-sm)',
+                            background: 'rgba(244,123,48,0.08)',
+                            border: '1px solid var(--brand-panel-border)',
+                            borderRadius: '6px',
                             padding: '10px 12px',
                         }}
                     >
-                        <div style={{ fontSize: '12px', color: 'var(--fg1)' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg)' }}>
                             Entrega sugerida: <strong>{fechaSugerida.toLocaleDateString('es-MX')}</strong>
                         </div>
-                        <div style={{ fontSize: '10px', color: 'var(--fg3)', marginTop: '2px' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)', marginTop: '2px' }}>
                             Es la fecha de fin más tardía entre todos los subpuntos que capturaste arriba (a
                             cualquier nivel). Si todavía no hay fechas, se estima con días hábiles de Lunes a
                             Sábado desde hoy.
@@ -630,18 +676,21 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                             name="estimatedDeliveryManual"
                             value={form.estimatedDeliveryManual}
                             onChange={handleChange}
+                            className="brand-panel-input"
                             style={{ ...inputStyle, colorScheme: 'dark' }}
                         />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Firmas</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Firmas
+                    </h2>
                     <FirmaModal label="Firma del cliente" firmaRef={clienteSigRef} initialDataUrl={initial?.clientSignature || undefined} />
                     <FirmaModal label="Firma de quien recibe" firmaRef={receptorSigRef} initialDataUrl={initial?.receiverSignature || undefined} />
                 </section>
 
-                {error && <p style={{ color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+                {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
 
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '32px' }}>
                     <button
@@ -650,13 +699,14 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                         onClick={() => enviar('borrador')}
                         style={{
                             flex: 1,
-                            background: 'var(--bg-card)',
-                            border: '1px solid var(--border-default)',
-                            color: 'var(--fg1)',
+                            background: 'var(--brand-panel-card)',
+                            border: '1px solid var(--brand-panel-border)',
+                            color: 'var(--brand-panel-fg)',
+                            fontFamily: 'var(--font-body)',
                             padding: '14px',
-                            borderRadius: 'var(--radius-md)',
+                            borderRadius: '8px',
                             cursor: 'pointer',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             fontSize: '13px',
                             opacity: loading ? 0.6 : 1,
                         }}
@@ -669,11 +719,12 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                         onClick={() => enviar('registrado')}
                         style={{
                             flex: 1,
-                            background: 'var(--accent)',
+                            background: 'var(--brand-orange)',
                             border: 'none',
                             color: '#fff',
+                            fontFamily: 'var(--font-body)',
                             padding: '14px',
-                            borderRadius: 'var(--radius-md)',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             fontWeight: 700,
                             fontSize: '13px',

@@ -75,19 +75,21 @@ export default function MarcarEstatusButton({ phaseId, mainPointKey, proyecto }:
                 disabled={loading}
                 onClick={onClick}
                 style={{
+                    fontFamily: 'var(--font-body)',
                     fontSize: '11px',
                     padding: '6px 12px',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '6px',
                     border: 'none',
-                    background: 'var(--accent)',
+                    background: 'var(--brand-orange)',
                     color: '#fff',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
+                    opacity: loading ? 0.6 : 1,
                 }}
             >
                 {loading ? 'Guardando...' : 'Marcar como completado'}
             </button>
-            {error && <p style={{ color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>{error}</p>}
+            {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>{error}</p>}
 
             {modal && proyecto && (
                 <ConfirmarCorreoModal

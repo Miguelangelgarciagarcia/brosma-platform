@@ -47,9 +47,9 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                     <div
                         key={grupo.folio}
                         style={{
-                            background: 'var(--bg-card)',
-                            border: `1px solid ${hayRetrasados ? '#e0503a' : 'var(--border-default)'}`,
-                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--brand-panel-card)',
+                            border: `1px solid ${hayRetrasados ? '#ff6b6b' : 'var(--brand-panel-border)'}`,
+                            borderRadius: '10px',
                             overflow: 'hidden',
                         }}
                     >
@@ -70,22 +70,35 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                             }}
                         >
                             <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--accent-hover)' }}>
+                                <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--brand-orange)' }}>
                                     {grupo.folio}
                                 </div>
-                                <div style={{ fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <div
+                                    style={{
+                                        fontFamily: 'var(--font-body)',
+                                        fontSize: '14px',
+                                        fontWeight: 700,
+                                        color: 'var(--brand-panel-fg)',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
                                     {grupo.title}
                                 </div>
-                                <div style={{ fontSize: '11px', color: 'var(--fg3)' }}>{grupo.clientName}</div>
+                                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
+                                    {grupo.clientName}
+                                </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                                 {hayRetrasados && (
                                     <span
                                         style={{
+                                            fontFamily: 'var(--font-body)',
                                             fontSize: '10px',
-                                            fontWeight: 600,
-                                            color: '#e0503a',
-                                            background: 'rgba(224,80,58,0.12)',
+                                            fontWeight: 700,
+                                            color: '#ff6b6b',
+                                            background: 'rgba(255,107,107,0.14)',
                                             borderRadius: '999px',
                                             padding: '2px 8px',
                                         }}
@@ -93,10 +106,10 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                                         ⚠ Retrasado
                                     </span>
                                 )}
-                                <span style={{ fontSize: '11px', color: 'var(--fg3)' }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
                                     {grupo.fases.length} punto{grupo.fases.length === 1 ? '' : 's'}
                                 </span>
-                                <span style={{ fontSize: '10px', color: 'var(--fg3)' }}>{abierto ? '▼' : '▶'}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>{abierto ? '▼' : '▶'}</span>
                             </div>
                         </button>
 

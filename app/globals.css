@@ -68,6 +68,19 @@ body {
   --brand-border: rgba(2, 39, 58, 0.12);
 
   --font-heading: var(--font-grifter), var(--font-anton), "Anton", var(--font-body);
+
+  /* Tokens del panel interno (Admin/Trabajador): mismo espíritu oscuro que
+     los heros públicos, pero pensados para usarse muchas horas al día — sin
+     animaciones de fondo, solo la paleta/tipografía de marca aplicada a la
+     "app" de trabajo. */
+  --brand-panel-bg: #071826;
+  --brand-panel-card: #0d2436;
+  --brand-panel-card-hover: #123049;
+  --brand-panel-input: rgba(255, 255, 255, 0.06);
+  --brand-panel-border: rgba(255, 255, 255, 0.1);
+  --brand-panel-fg: rgba(255, 255, 255, 0.92);
+  --brand-panel-fg2: rgba(255, 255, 255, 0.6);
+  --brand-panel-fg3: rgba(255, 255, 255, 0.38);
 }
 
 @keyframes brandFadeUp {
@@ -151,4 +164,18 @@ body {
 .brand-result-accent {
   height: 4px;
   background: linear-gradient(90deg, var(--brand-navy), var(--brand-orange));
+}
+
+/* Tarjetas del panel interno (dashboard, historial): mismo hover sutil en
+   todas, en vez de repetirlo a mano en cada componente. */
+a.brand-panel-card:hover {
+  background: var(--brand-panel-card-hover);
+  border-color: rgba(244, 123, 48, 0.35);
+}
+
+/* Inputs de los formularios del panel interno (nuevo/editar proyecto). */
+.brand-panel-input:focus {
+  outline: none;
+  border-color: var(--brand-orange);
+  background: rgba(255, 255, 255, 0.09);
 }

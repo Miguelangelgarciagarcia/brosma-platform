@@ -47,25 +47,28 @@ function validarSubpuntosCompletos(nodes: SubpointNode[], pathLabel: string): st
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-sm)',
+    background: 'var(--brand-panel-input)',
+    border: '1px solid var(--brand-panel-border)',
+    borderRadius: '6px',
     padding: '10px 12px',
-    color: 'var(--fg1)',
+    color: 'var(--brand-panel-fg)',
+    fontFamily: 'var(--font-body)',
     fontSize: '13px',
+    transition: 'border-color 0.15s ease, background 0.15s ease',
 }
 
 const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-body)',
     fontSize: '11px',
-    color: 'var(--fg2)',
+    color: 'var(--brand-panel-fg2)',
     display: 'block',
     marginBottom: '4px',
 }
 
 const sectionStyle: React.CSSProperties = {
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-md)',
+    background: 'var(--brand-panel-card)',
+    border: '1px solid var(--brand-panel-border)',
+    borderRadius: '10px',
     padding: '18px',
     display: 'flex',
     flexDirection: 'column',
@@ -348,51 +351,73 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
     }
 
     return (
-        <main style={{ minHeight: '100vh' }}>
+        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <div
                 style={{
-                    borderBottom: '1px solid var(--border-subtle)',
+                    background: 'var(--brand-navy-deep)',
+                    borderBottom: '1px solid var(--brand-panel-border)',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}
             >
-                <div style={{ fontWeight: 700, fontSize: '16px' }}>Brosma</div>
-                <Link href={`/admin/proyecto/${folio}`} style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                        GRUPO BROSMA
+                    </div>
+                </div>
+                <Link
+                    href={`/admin/proyecto/${folio}`}
+                    style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}
+                >
                     ← Volver
                 </Link>
             </div>
 
             <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Editar proyecto {folio}</h1>
-                <p style={{ fontSize: '12px', color: 'var(--fg3)', margin: 0 }}>
+                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#ffffff', margin: 0 }}>
+                    Editar proyecto {folio}
+                </h1>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                     Este proyecto ya está registrado. Si cambias la fecha de entrega o los datos de pago, te
                     preguntaremos si quieres avisarle al cliente antes de guardar.
                 </p>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos generales</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos generales
+                    </h2>
                     <div>
                         <label style={labelStyle}>Descripción breve del proyecto *</label>
-                        <input name="title" value={form.title} onChange={handleChange} style={inputStyle} />
+                        <input name="title" value={form.title} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos del cliente</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos del cliente
+                    </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Nombre completo *</label>
-                            <input name="clientName" value={form.clientName} onChange={handleChange} style={inputStyle} />
+                            <input name="clientName" value={form.clientName} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Empresa *</label>
-                            <input name="company" value={form.company} onChange={handleChange} style={inputStyle} />
+                            <input name="company" value={form.company} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Teléfono *</label>
-                            <input name="phone" value={form.phone} onChange={handlePhoneChange} inputMode="numeric" style={inputStyle} />
+                            <input
+                                name="phone"
+                                value={form.phone}
+                                onChange={handlePhoneChange}
+                                inputMode="numeric"
+                                className="brand-panel-input"
+                                style={inputStyle}
+                            />
                         </div>
                         <div>
                             <label style={labelStyle}>Correo *</label>
@@ -401,19 +426,34 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 type="email"
                                 value={form.email}
                                 onChange={handleChange}
-                                style={{ ...inputStyle, border: `1px solid ${emailValido ? 'var(--border-default)' : '#ff6b6b'}` }}
+                                className="brand-panel-input"
+                                style={{ ...inputStyle, border: `1px solid ${emailValido ? 'var(--brand-panel-border)' : '#ff6b6b'}` }}
                             />
-                            {!emailValido && <p style={{ color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>Correo con formato inválido</p>}
+                            {!emailValido && (
+                                <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>
+                                    Correo con formato inválido
+                                </p>
+                            )}
                         </div>
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Datos financieros</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Datos financieros
+                    </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Costo</label>
-                            <input name="cost" inputMode="decimal" value={form.cost} onChange={handleCostChange} placeholder="0.00" style={inputStyle} />
+                            <input
+                                name="cost"
+                                inputMode="decimal"
+                                value={form.cost}
+                                onChange={handleCostChange}
+                                placeholder="0.00"
+                                className="brand-panel-input"
+                                style={inputStyle}
+                            />
                         </div>
                         <div>
                             <label style={labelStyle}>Adelanto</label>
@@ -424,6 +464,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 onChange={handleAdvanceChange}
                                 disabled={!costoValido}
                                 placeholder={costoValido ? '0.00' : 'Primero coloca el costo'}
+                                className="brand-panel-input"
                                 style={{ ...inputStyle, opacity: costoValido ? 1 : 0.5, cursor: costoValido ? 'text' : 'not-allowed' }}
                             />
                         </div>
@@ -432,13 +473,23 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', background: 'transparent' }}>
                                 <span
                                     style={{
+                                        fontFamily: 'var(--font-body)',
                                         fontSize: '11px',
-                                        fontWeight: 600,
+                                        fontWeight: 700,
                                         padding: '4px 10px',
                                         borderRadius: '999px',
                                         background:
-                                            paymentStatus === 'pagado' ? 'rgba(47,111,237,0.15)' : paymentStatus === 'anticipo' ? 'rgba(224,160,32,0.15)' : 'rgba(255,255,255,0.06)',
-                                        color: paymentStatus === 'pagado' ? 'var(--accent-hover)' : paymentStatus === 'anticipo' ? '#e0a020' : 'var(--fg3)',
+                                            paymentStatus === 'pagado'
+                                                ? 'rgba(2,39,58,0.35)'
+                                                : paymentStatus === 'anticipo'
+                                                ? 'rgba(244,123,48,0.15)'
+                                                : 'rgba(255,255,255,0.06)',
+                                        color:
+                                            paymentStatus === 'pagado'
+                                                ? '#ffffff'
+                                                : paymentStatus === 'anticipo'
+                                                ? 'var(--brand-orange)'
+                                                : 'var(--brand-panel-fg3)',
                                     }}
                                 >
                                     {paymentStatus === 'pagado' ? 'Pagado' : paymentStatus === 'anticipo' ? 'Anticipo' : 'Pendiente'}
@@ -448,13 +499,22 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                     </div>
                     <div>
                         <label style={labelStyle}>Notas</label>
-                        <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+                        <textarea
+                            name="notes"
+                            value={form.notes}
+                            onChange={handleChange}
+                            rows={3}
+                            className="brand-panel-input"
+                            style={{ ...inputStyle, resize: 'vertical' as const }}
+                        />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Puntos principales y fases</h2>
-                    <p style={{ fontSize: '11px', color: 'var(--fg3)', margin: 0 }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Puntos principales y fases
+                    </h2>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                         "Listo para Entrega" y "Entregado" se marcan desde el detalle del proyecto, no aquí.
                     </p>
 
@@ -466,17 +526,35 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             return (
                                 <div
                                     key={mp.mainPointKey}
-                                    style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+                                    style={{
+                                        border: '1px solid var(--brand-panel-border)',
+                                        borderRadius: '10px',
+                                        padding: '12px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
+                                    }}
                                 >
-                                    <div style={{ fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div
+                                        style={{
+                                            fontFamily: 'var(--font-body)',
+                                            fontWeight: 700,
+                                            fontSize: '13px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            color: 'var(--brand-panel-fg)',
+                                        }}
+                                    >
                                         {index + 1}. {mp.label}
                                         {mpBloqueado && (
                                             <span
                                                 style={{
+                                                    fontFamily: 'var(--font-body)',
                                                     fontSize: '10px',
-                                                    fontWeight: 600,
-                                                    color: 'var(--accent-hover)',
-                                                    background: 'rgba(47,111,237,0.12)',
+                                                    fontWeight: 700,
+                                                    color: 'var(--brand-orange)',
+                                                    background: 'rgba(244,123,48,0.15)',
                                                     borderRadius: '999px',
                                                     padding: '2px 8px',
                                                 }}
@@ -490,6 +568,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                             value={mp.responsibleId}
                                             disabled={mpBloqueado}
                                             onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
+                                            className="brand-panel-input"
                                             style={{ ...inputStyle, opacity: mpBloqueado ? 0.6 : 1 }}
                                         >
                                             <option value="">Responsable...</option>
@@ -499,9 +578,18 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                 </option>
                                             ))}
                                         </select>
-                                        <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', color: 'var(--fg2)' }}>
+                                        <div
+                                            style={{
+                                                ...inputStyle,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                background: 'transparent',
+                                                color: 'var(--brand-panel-fg2)',
+                                            }}
+                                        >
                                             <span>Días estimados</span>
-                                            <strong style={{ color: 'var(--fg1)' }}>{dias}</strong>
+                                            <strong style={{ color: 'var(--brand-panel-fg)' }}>{dias}</strong>
                                         </div>
                                     </div>
 
@@ -518,7 +606,16 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                         })}
                     </div>
 
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--fg2)' }}>
+                    <label
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            color: 'var(--brand-panel-fg2)',
+                        }}
+                    >
                         <input
                             type="checkbox"
                             checked={form.clientCanSeeSubpoints}
@@ -527,8 +624,15 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                         El cliente puede ver el primer nivel de subpuntos (1.1, 1.2...) en su seguimiento
                     </label>
 
-                    <div style={{ background: 'rgba(47,111,237,0.08)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                        <div style={{ fontSize: '12px', color: 'var(--fg1)' }}>
+                    <div
+                        style={{
+                            background: 'rgba(244,123,48,0.08)',
+                            border: '1px solid var(--brand-panel-border)',
+                            borderRadius: '6px',
+                            padding: '10px 12px',
+                        }}
+                    >
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg)' }}>
                             Entrega sugerida: <strong>{fechaSugerida.toLocaleDateString('es-MX')}</strong>
                         </div>
                     </div>
@@ -540,29 +644,33 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             name="estimatedDeliveryManual"
                             value={form.estimatedDeliveryManual}
                             onChange={handleChange}
+                            className="brand-panel-input"
                             style={{ ...inputStyle, colorScheme: 'dark' }}
                         />
                     </div>
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--fg2)' }}>Firmas</h2>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                        Firmas
+                    </h2>
                     <FirmaModal label="Firma del cliente" firmaRef={clienteSigRef} initialDataUrl={initial.clientSignature || undefined} />
                     <FirmaModal label="Firma de quien recibe" firmaRef={receptorSigRef} initialDataUrl={initial.receiverSignature || undefined} />
                 </section>
 
-                {error && <p style={{ color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+                {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
 
                 <button
                     type="button"
                     disabled={loading}
                     onClick={preparar}
                     style={{
-                        background: 'var(--accent)',
+                        background: 'var(--brand-orange)',
                         border: 'none',
                         color: '#fff',
+                        fontFamily: 'var(--font-body)',
                         padding: '14px',
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: '8px',
                         cursor: 'pointer',
                         fontWeight: 700,
                         fontSize: '13px',

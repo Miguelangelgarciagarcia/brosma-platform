@@ -76,20 +76,21 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--fg2)' }}>{label}</label>
+            <label style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>{label}</label>
 
             <div
                 onClick={abrirModal}
                 style={{
-                    border: firmada ? '1px solid var(--accent)' : '1px dashed var(--border-default)',
-                    borderRadius: 'var(--radius-md)',
+                    border: firmada ? '1px solid var(--brand-orange)' : '1px dashed var(--brand-panel-border)',
+                    borderRadius: '10px',
                     height: '80px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    background: firmada ? 'rgba(47,111,237,0.08)' : 'var(--bg-input)',
-                    color: firmada ? 'var(--accent-hover)' : 'var(--fg3)',
+                    background: firmada ? 'rgba(244,123,48,0.08)' : 'var(--brand-panel-input)',
+                    color: firmada ? 'var(--brand-orange)' : 'var(--brand-panel-fg3)',
+                    fontFamily: 'var(--font-body)',
                     fontSize: '13px',
                     gap: '8px',
                 }}
@@ -101,7 +102,15 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                 <button
                     type="button"
                     onClick={limpiarFirma}
-                    style={{ fontSize: '11px', color: '#e0503a', background: 'none', border: 'none', alignSelf: 'flex-end', cursor: 'pointer' }}
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '11px',
+                        color: '#ff6b6b',
+                        background: 'none',
+                        border: 'none',
+                        alignSelf: 'flex-end',
+                        cursor: 'pointer',
+                    }}
                 >
                     Eliminar firma
                 </button>
