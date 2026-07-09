@@ -5,9 +5,27 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PasswordInput from '@/components/PasswordInput'
+import Aurora from '@/components/reactbits/Aurora'
+import BlurText from '@/components/reactbits/BlurText'
+import StarBorder from '@/components/reactbits/StarBorder'
 
-// Versión mínima para probar el flujo de auth de la Fase 0/1.
-// Se rediseñará junto con el resto del panel en fases posteriores.
+const glassInputStyle: React.CSSProperties = {
+    width: '100%',
+    boxSizing: 'border-box',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    borderRadius: '4px',
+    padding: '14px 16px',
+    color: '#ffffff',
+    fontSize: '14px',
+    fontFamily: 'var(--font-body)',
+    transition: 'border-color 0.15s ease, background 0.15s ease',
+}
+
+// Acceso interno (Admin / Trabajador). Misma línea gráfica que el inicio y
+// seguimiento: hero oscuro con Aurora de fondo, BlurText en el encabezado y
+// los mismos inputs "glass"/botón StarBorder, para que se sienta la misma
+// aplicación en todas las pantallas públicas.
 export default function LoginPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
@@ -44,100 +62,162 @@ export default function LoginPage() {
     return (
         <main
             style={{
+                position: 'relative',
                 minHeight: '100vh',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '24px',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                background: 'var(--brand-navy-deep)',
             }}
         >
-            <form
-                onSubmit={handleSubmit}
+            <div style={{ position: 'absolute', inset: 0 }}>
+                <Aurora colorStops={['#02273a', '#f47b30', '#02273a']} amplitude={0.9} blend={0.55} speed={0.6} />
+            </div>
+
+            <div
                 style={{
-                    width: '100%',
-                    maxWidth: '360px',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-default)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '28px',
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `
+                        repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, transparent 1px, transparent 56px),
+                        repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, transparent 1px, transparent 56px)
+                    `,
+                    pointerEvents: 'none',
+                }}
+            />
+
+            <div
+                style={{
+                    position: 'relative',
+                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '14px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '28px 20px',
                 }}
             >
-                <div>
-                    <Link href="/" style={{ fontSize: '12px', color: 'var(--fg2)', textDecoration: 'none' }}>
-                        ← Volver al inicio
-                    </Link>
-                </div>
-
-                <h1 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 6px' }}>
-                    Iniciar sesión
-                </h1>
-
-                <div>
-                    <label style={{ fontSize: '12px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                        Correo
-                    </label>
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                <div style={{ width: '100%', maxWidth: '380px', textAlign: 'center' }}>
+                    <Link
+                        href="/"
                         style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            background: 'var(--bg-input)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '10px 12px',
-                            color: 'var(--fg1)',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            letterSpacing: '0.1em',
+                            color: 'var(--brand-white-65)',
+                            textDecoration: 'none',
                         }}
-                    />
+                    >
+                        ← GRUPO BROSMA
+                    </Link>
+
+                    <div
+                        style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            letterSpacing: '0.24em',
+                            textTransform: 'uppercase',
+                            color: 'var(--brand-orange)',
+                            marginTop: '22px',
+                            animation: 'brandFadeUp 0.6s ease-out 0.05s both',
+                        }}
+                    >
+                        Acceso interno
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                        <BlurText
+                            text="INICIAR SESIÓN"
+                            animateBy="words"
+                            direction="top"
+                            delay={80}
+                            className="brand-seguimiento-heading"
+                        />
+                    </div>
+                    <p
+                        style={{
+                            fontFamily: 'var(--font-body)',
+                            color: 'var(--brand-white-65)',
+                            fontSize: '14px',
+                            marginTop: '10px',
+                            lineHeight: 1.5,
+                            animation: 'brandFadeUp 0.6s ease-out 0.15s both',
+                        }}
+                    >
+                        Ingresa tus datos para entrar al panel de Admin o Trabajador.
+                    </p>
+
+                    <form
+                        onSubmit={handleSubmit}
+                        style={{
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.16)',
+                            backdropFilter: 'blur(14px)',
+                            borderRadius: '12px',
+                            padding: '22px',
+                            marginTop: '28px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '14px',
+                            textAlign: 'left',
+                            animation: 'brandFadeUp 0.6s ease-out 0.2s both',
+                        }}
+                    >
+                        <div>
+                            <label style={{ fontSize: '11px', color: 'var(--brand-white-65)', display: 'block', marginBottom: '6px', letterSpacing: '0.03em' }}>
+                                CORREO
+                            </label>
+                            <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="brand-glass-input"
+                                style={glassInputStyle}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '11px', color: 'var(--brand-white-65)', display: 'block', marginBottom: '6px', letterSpacing: '0.03em' }}>
+                                CONTRASEÑA
+                            </label>
+                            <PasswordInput
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="brand-glass-input"
+                                style={{ ...glassInputStyle, padding: '14px 40px 14px 16px' }}
+                            />
+                        </div>
+
+                        {error && <p style={{ color: '#ffb4a3', fontSize: '13px', margin: 0 }}>{error}</p>}
+
+                        <StarBorder
+                            as="button"
+                            type="submit"
+                            disabled={loading}
+                            color="#ffffff"
+                            speed="4s"
+                            style={{ width: '100%', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+                        >
+                            {loading ? 'Entrando...' : 'Entrar'}
+                        </StarBorder>
+
+                        <Link
+                            href="/seguimiento"
+                            style={{
+                                fontFamily: 'var(--font-body)',
+                                fontSize: '13px',
+                                color: 'var(--brand-white-65)',
+                                textDecoration: 'none',
+                                textAlign: 'center',
+                            }}
+                        >
+                            ¿Eres cliente? Rastrea tu proyecto →
+                        </Link>
+                    </form>
                 </div>
-
-                <div>
-                    <label style={{ fontSize: '12px', color: 'var(--fg2)', display: 'block', marginBottom: '4px' }}>
-                        Contraseña
-                    </label>
-                    <PasswordInput
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-
-                {error && <p style={{ color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                        background: 'var(--accent)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 'var(--radius-sm)',
-                        padding: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        opacity: loading ? 0.6 : 1,
-                    }}
-                >
-                    {loading ? 'Entrando...' : 'Entrar'}
-                </button>
-
-                <Link
-                    href="/seguimiento"
-                    style={{
-                        fontSize: '13px',
-                        color: 'var(--fg2)',
-                        textDecoration: 'none',
-                        textAlign: 'center',
-                    }}
-                >
-                    ¿Eres cliente? Rastrea tu proyecto →
-                </Link>
-            </form>
+            </div>
         </main>
     )
 }
