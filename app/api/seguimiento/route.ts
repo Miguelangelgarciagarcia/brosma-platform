@@ -41,11 +41,13 @@ export async function POST(req: Request) {
         if (project.recordStatus !== 'registrado') return generic()
         if (project.phone.replace(/\D/g, '').slice(-4) !== phone4) return generic()
 
-        const fases = await prisma.phase.findMany({
-            where: {
-                projectId: project.id,
-                depth: project.clientCanSeeSubpoints ? { in: [0, 1] } : 0,
-            },
+        // Para el % de avance sí traemos TODAS las profundidades (sin
+        // importar clientCanSeeSubpoints): el número debe reflejar el trabajo
+        // real que ya se hizo, aunque el cliente no pueda ver el detalle de
+        // cada subpunto. Lo que sí respeta clientCanSeeSubpoints es la lista
+        // de subpuntos que se manda a mostrar más abajo.
+        const todasLasFases = await prisma.phase.findMany({
+            where: { projectId: project.id },
             orderBy: [{ depth: 'asc' }, { order: 'asc' }],
             select: {
                 id: true,
@@ -57,8 +59,8 @@ export async function POST(req: Request) {
             },
         })
 
-        const puntosPrincipales = fases.filter((f) => f.depth === 0)
-        const subpuntos = fases.filter((f) => f.depth === 1)
+        const puntosPrincipales = todasLasFases.filter((f) => f.depth === 0)
+        const subpuntos = todasLasFases.filter((f) => f.depth === 1)
 
         const puntos = puntosPrincipales.map((p) => ({
             key: p.mainPointKey,
@@ -69,8 +71,18 @@ export async function POST(req: Request) {
                 : undefined,
         }))
 
-        const completados = puntosPrincipales.filter((p) => p.status === 'completado').length
-        const progreso = Math.round((completados / puntosPrincipales.length) * 100)
+        // El % de avance se calcula por "hoja" (la unidad de trabajo más
+        // chica: un subpunto sin hijos, o un punto principal sin subpuntos
+        // como "Listo para Entrega"/"Entregado"), no solo por puntos
+        // principales completos. Así, en cuanto se termina un subpunto ya se
+        // nota en el porcentaje, en vez de esperar a que se complete todo un
+        // punto principal.
+        const idsConHijos = new Set(
+            todasLasFases.map((f) => f.parentId).filter((id): id is string => !!id)
+        )
+        const hojas = todasLasFases.filter((f) => !idsConHijos.has(f.id))
+        const hojasCompletadas = hojas.filter((h) => h.status === 'completado').length
+        const progreso = hojas.length > 0 ? Math.round((hojasCompletadas / hojas.length) * 100) : 0
 
         return NextResponse.json({
             folio: project.folio,

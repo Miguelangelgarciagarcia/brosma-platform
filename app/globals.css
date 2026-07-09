@@ -133,3 +133,22 @@ body {
   margin: 0;
   justify-content: center;
 }
+
+/* Misma idea que .brand-hero-heading, pero para el hero (más chico) de
+   /seguimiento. */
+.brand-seguimiento-heading {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1;
+  color: #ffffff;
+  margin: 0;
+  justify-content: center;
+}
+
+/* Barra de acento (navy -> naranja) arriba del card de resultado en
+   /seguimiento, para reforzar la identidad de marca sin perder la
+   legibilidad del contenido blanco de abajo. */
+.brand-result-accent {
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand-navy), var(--brand-orange));
+}

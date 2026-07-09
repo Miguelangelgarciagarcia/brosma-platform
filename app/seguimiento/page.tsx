@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
+import Aurora from '@/components/reactbits/Aurora'
+import BlurText from '@/components/reactbits/BlurText'
+import StarBorder from '@/components/reactbits/StarBorder'
 
 type Punto = {
     key: string | null
@@ -33,22 +36,42 @@ const glassInputStyle: React.CSSProperties = {
     transition: 'border-color 0.15s ease, background 0.15s ease',
 }
 
+// Colores pensados para el card oscuro (antes vivían pensados para un card
+// blanco): completado en blanco (se "prende"), en proceso en naranja (el
+// acento que llama la atención), pendiente apenas insinuado.
 function colorDePunto(status: string) {
-    if (status === 'completado') return 'var(--brand-navy)'
+    if (status === 'completado') return '#ffffff'
     if (status === 'en_proceso') return 'var(--brand-orange)'
-    return 'rgba(2,39,58,0.18)'
+    return 'rgba(255,255,255,0.25)'
 }
 
 // Anillo circular grande de progreso — el elemento que más debe llamar la
-// atención del cliente al entrar a ver su proyecto.
+// atención del cliente al entrar a ver su proyecto. El número dentro cuenta
+// hacia arriba desde 0 al mismo ritmo que se llena el anillo, para que se
+// sienta como un solo movimiento (no un valor estático que aparece de golpe).
 function AnilloProgreso({ progreso, entregado }: { progreso: number; entregado: boolean }) {
     const r = 62
     const circunferencia = 2 * Math.PI * r
+    const [animado, setAnimado] = useState(0)
+
+    useEffect(() => {
+        setAnimado(0)
+        const inicio = performance.now()
+        const duracion = 900
+        let frame = 0
+        function tick(t: number) {
+            const avance = Math.min(1, (t - inicio) / duracion)
+            setAnimado(Math.round(avance * progreso))
+            if (avance < 1) frame = requestAnimationFrame(tick)
+        }
+        frame = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(frame)
+    }, [progreso])
 
     return (
         <div style={{ position: 'relative', width: '150px', height: '150px', flexShrink: 0 }}>
             <svg width="150" height="150" viewBox="0 0 150 150" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="75" cy="75" r={r} fill="none" stroke="rgba(2,39,58,0.08)" strokeWidth="12" />
+                <circle cx="75" cy="75" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="12" />
                 <circle
                     cx="75"
                     cy="75"
@@ -58,8 +81,8 @@ function AnilloProgreso({ progreso, entregado }: { progreso: number; entregado: 
                     strokeWidth="12"
                     strokeLinecap="round"
                     strokeDasharray={circunferencia}
-                    strokeDashoffset={circunferencia * (1 - progreso / 100)}
-                    style={{ transition: 'stroke-dashoffset 900ms ease' }}
+                    strokeDashoffset={circunferencia * (1 - animado / 100)}
+                    style={{ transition: 'stroke-dashoffset 100ms linear' }}
                 />
             </svg>
             <div
@@ -75,8 +98,8 @@ function AnilloProgreso({ progreso, entregado }: { progreso: number; entregado: 
                 {entregado ? (
                     <div style={{ fontSize: '38px' }}>✅</div>
                 ) : (
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '34px', color: 'var(--brand-navy)', lineHeight: 1 }}>
-                        {progreso}%
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '34px', color: '#ffffff', lineHeight: 1 }}>
+                        {animado}%
                     </div>
                 )}
                 <div
@@ -86,7 +109,7 @@ function AnilloProgreso({ progreso, entregado }: { progreso: number; entregado: 
                         fontWeight: 700,
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
-                        color: 'var(--brand-black-60)',
+                        color: 'var(--brand-white-65)',
                         marginTop: '4px',
                     }}
                 >
@@ -129,19 +152,21 @@ export default function SeguimientoPage() {
     const entregado = resultado?.status === 'entregado'
 
     return (
-        <main style={{ minHeight: '100vh', background: 'var(--brand-bg-elev)' }}>
-            {/* Hero oscuro, misma línea gráfica que el inicio */}
+        <main style={{ minHeight: '100vh', background: 'var(--brand-navy-deep)' }}>
+            {/* Hero oscuro, misma línea gráfica que el inicio — ahora con Aurora
+                (React Bits) como fondo animado en vez del glow estático solo. */}
             <div
                 style={{
                     position: 'relative',
                     overflow: 'hidden',
-                    background: `
-                        radial-gradient(circle at 12% 15%, rgba(244,123,48,0.20), transparent 45%),
-                        linear-gradient(160deg, var(--brand-navy) 0%, var(--brand-navy-deep) 100%)
-                    `,
+                    background: 'var(--brand-navy-deep)',
                     paddingBottom: resultado ? '96px' : '56px',
                 }}
             >
+                <div style={{ position: 'absolute', inset: 0 }}>
+                    <Aurora colorStops={['#02273a', '#f47b30', '#02273a']} amplitude={0.9} blend={0.55} speed={0.6} />
+                </div>
+
                 <div
                     style={{
                         position: 'absolute',
@@ -150,20 +175,6 @@ export default function SeguimientoPage() {
                             repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, transparent 1px, transparent 56px),
                             repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, transparent 1px, transparent 56px)
                         `,
-                        pointerEvents: 'none',
-                    }}
-                />
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '-14%',
-                        left: '-10%',
-                        width: '420px',
-                        height: '420px',
-                        borderRadius: '50%',
-                        background: 'radial-gradient(circle, rgba(244,123,48,0.26) 0%, transparent 70%)',
-                        filter: 'blur(10px)',
-                        animation: 'brandGlowFloat 12s ease-in-out infinite',
                         pointerEvents: 'none',
                     }}
                 />
@@ -196,18 +207,15 @@ export default function SeguimientoPage() {
                     >
                         Seguimiento en línea
                     </div>
-                    <h1
-                        style={{
-                            fontFamily: 'var(--font-heading)',
-                            fontSize: 'clamp(28px, 6vw, 40px)',
-                            lineHeight: 1.1,
-                            color: '#ffffff',
-                            margin: '10px 0 0',
-                            animation: 'brandFadeUp 0.6s ease-out 0.1s both',
-                        }}
-                    >
-                        RASTREA TU PROYECTO
-                    </h1>
+                    <div style={{ marginTop: '10px' }}>
+                        <BlurText
+                            text="RASTREA TU PROYECTO"
+                            animateBy="words"
+                            direction="top"
+                            delay={80}
+                            className="brand-seguimiento-heading"
+                        />
+                    </div>
                     <p
                         style={{
                             fontFamily: 'var(--font-body)',
@@ -267,28 +275,16 @@ export default function SeguimientoPage() {
 
                         {error && <p style={{ color: '#ffb4a3', fontSize: '13px', margin: 0 }}>{error}</p>}
 
-                        <button
+                        <StarBorder
+                            as="button"
                             type="submit"
                             disabled={loading}
-                            className="brand-btn-primary"
-                            style={{
-                                background: 'var(--brand-orange)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '4px',
-                                padding: '14px',
-                                fontWeight: 700,
-                                fontSize: '13px',
-                                letterSpacing: '0.05em',
-                                textTransform: 'uppercase',
-                                fontFamily: 'var(--font-body)',
-                                cursor: 'pointer',
-                                opacity: loading ? 0.7 : 1,
-                                boxShadow: '0 8px 24px rgba(244,123,48,0.35)',
-                            }}
+                            color="#ffffff"
+                            speed="4s"
+                            style={{ width: '100%', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
                         >
                             {loading ? 'Buscando...' : 'Buscar'}
-                        </button>
+                        </StarBorder>
                     </form>
                 </div>
             </div>
@@ -299,22 +295,23 @@ export default function SeguimientoPage() {
                 <div style={{ maxWidth: '520px', margin: '-72px auto 48px', padding: '0 20px', position: 'relative', zIndex: 2 }}>
                     <div
                         style={{
-                            background: '#ffffff',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            backdropFilter: 'blur(18px)',
                             borderRadius: '16px',
-                            boxShadow: '0 24px 60px rgba(2,39,58,0.22)',
-                            padding: '28px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '22px',
+                            boxShadow: '0 30px 70px rgba(0,0,0,0.45)',
+                            overflow: 'hidden',
                             animation: 'brandFadeUp 0.6s ease-out both',
                         }}
                     >
+                        <div className="brand-result-accent" />
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                             <div>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--brand-orange)', fontWeight: 700 }}>
                                     {resultado.folio}
                                 </div>
-                                <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, color: 'var(--brand-navy)', margin: '4px 0 0' }}>
+                                <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: '4px 0 0' }}>
                                     {resultado.title}
                                 </h2>
                             </div>
@@ -342,7 +339,8 @@ export default function SeguimientoPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '20px',
-                                background: 'var(--brand-bg-elev)',
+                                background: 'rgba(255,255,255,0.04)',
+                                border: '1px solid rgba(255,255,255,0.08)',
                                 borderRadius: '12px',
                                 padding: '18px',
                             }}
@@ -356,7 +354,7 @@ export default function SeguimientoPage() {
                                         fontWeight: 700,
                                         letterSpacing: '0.06em',
                                         textTransform: 'uppercase',
-                                        color: 'var(--brand-black-60)',
+                                        color: 'var(--brand-white-65)',
                                     }}
                                 >
                                     Entrega estimada
@@ -365,7 +363,7 @@ export default function SeguimientoPage() {
                                     style={{
                                         fontFamily: 'var(--font-heading)',
                                         fontSize: '22px',
-                                        color: 'var(--brand-navy)',
+                                        color: '#ffffff',
                                         marginTop: '4px',
                                     }}
                                 >
@@ -382,7 +380,7 @@ export default function SeguimientoPage() {
                                     fontWeight: 700,
                                     letterSpacing: '0.06em',
                                     textTransform: 'uppercase',
-                                    color: 'var(--brand-black-60)',
+                                    color: 'var(--brand-white-65)',
                                     marginBottom: '14px',
                                 }}
                             >
@@ -395,7 +393,15 @@ export default function SeguimientoPage() {
                                     const color = colorDePunto(p.status)
                                     const enProceso = p.status === 'en_proceso'
                                     return (
-                                        <div key={p.key || i} style={{ position: 'relative', paddingLeft: '34px', paddingBottom: isLast ? 0 : '22px' }}>
+                                        <div
+                                            key={p.key || i}
+                                            style={{
+                                                position: 'relative',
+                                                paddingLeft: '34px',
+                                                paddingBottom: isLast ? 0 : '22px',
+                                                animation: `brandFadeUp 0.45s ease-out ${0.35 + i * 0.08}s both`,
+                                            }}
+                                        >
                                             {!isLast && (
                                                 <div
                                                     style={{
@@ -404,7 +410,7 @@ export default function SeguimientoPage() {
                                                         top: '22px',
                                                         bottom: 0,
                                                         width: '2px',
-                                                        background: p.status === 'completado' ? 'var(--brand-navy)' : 'rgba(2,39,58,0.12)',
+                                                        background: p.status === 'completado' ? 'var(--brand-orange)' : 'rgba(255,255,255,0.15)',
                                                     }}
                                                 />
                                             )}
@@ -416,7 +422,7 @@ export default function SeguimientoPage() {
                                                     width: '20px',
                                                     height: '20px',
                                                     borderRadius: '50%',
-                                                    background: p.status === 'completado' ? 'var(--brand-navy)' : '#ffffff',
+                                                    background: p.status === 'completado' ? '#ffffff' : 'transparent',
                                                     border: `2px solid ${color}`,
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -425,7 +431,7 @@ export default function SeguimientoPage() {
                                                 }}
                                             >
                                                 {p.status === 'completado' && (
-                                                    <span style={{ color: '#fff', fontSize: '11px', lineHeight: 1 }}>✓</span>
+                                                    <span style={{ color: 'var(--brand-navy)', fontSize: '11px', lineHeight: 1, fontWeight: 700 }}>✓</span>
                                                 )}
                                                 {enProceso && (
                                                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--brand-orange)' }} />
@@ -436,7 +442,7 @@ export default function SeguimientoPage() {
                                                     fontFamily: 'var(--font-body)',
                                                     fontSize: '14px',
                                                     fontWeight: 700,
-                                                    color: p.status === 'pendiente' ? 'var(--brand-black-40)' : 'var(--brand-navy)',
+                                                    color: p.status === 'pendiente' ? 'rgba(255,255,255,0.35)' : '#ffffff',
                                                 }}
                                             >
                                                 {i + 1}. {p.label}
@@ -454,7 +460,7 @@ export default function SeguimientoPage() {
                                                                     flexShrink: 0,
                                                                 }}
                                                             />
-                                                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-black-60)' }}>
+                                                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-white-65)' }}>
                                                                 {s.title}
                                                             </span>
                                                         </div>
@@ -465,6 +471,7 @@ export default function SeguimientoPage() {
                                     )
                                 })}
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>
