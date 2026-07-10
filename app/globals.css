@@ -179,3 +179,17 @@ a.brand-panel-card:hover {
   border-color: var(--brand-orange);
   background: rgba(255, 255, 255, 0.09);
 }
+
+/* Combobox de trabajador/responsable (y cualquier otro <select> del panel
+   interno): la caja cerrada ya tomaba los colores de marca vía inputStyle,
+   pero el listado desplegable lo dibuja el navegador con su tema claro por
+   default si no se declara color-scheme, y ahí es donde el texto (casi
+   blanco) quedaba invisible sobre fondo blanco. */
+select.brand-panel-input {
+  color-scheme: dark;
+}
+
+select.brand-panel-input option {
+  background: var(--brand-panel-card);
+  color: var(--brand-panel-fg);
+}
