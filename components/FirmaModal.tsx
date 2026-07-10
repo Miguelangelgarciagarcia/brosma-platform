@@ -139,10 +139,13 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                             borderRadius: '16px',
                             width: '100%',
                             maxWidth: '480px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
                             padding: '20px',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '14px',
+                            boxSizing: 'border-box',
                         }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -164,18 +167,18 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                             <button
                                 type="button"
                                 onClick={limpiar}
-                                style={{ flex: 1, border: '1px solid #ccc', color: '#555', background: '#fff', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}
+                                style={{ flex: '1 1 120px', border: '1px solid #ccc', color: '#555', background: '#fff', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}
                             >
                                 Limpiar
                             </button>
                             <button
                                 type="button"
                                 onClick={confirmar}
-                                style={{ flex: 1, border: 'none', color: '#fff', background: '#111', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}
+                                style={{ flex: '1 1 120px', border: 'none', color: '#fff', background: '#111', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}
                             >
                                 Confirmar ✓
                             </button>

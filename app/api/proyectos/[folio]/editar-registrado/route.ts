@@ -88,12 +88,42 @@ export async function PATCH(
             )
         }
 
+        // Ningún punto de trabajo puede quedar vacío: necesita al menos un
+        // subpunto (1.1). Resguardo del lado del servidor (ya se valida
+        // también en el formulario).
+        const puntosVacios = mainPoints.filter(
+            (p) => !esPuntoSoloEstatus(p.mainPointKey) && (!p.children || p.children.length === 0)
+        )
+        if (puntosVacios.length > 0) {
+            return NextResponse.json(
+                {
+                    error: `No puedes guardar el proyecto con puntos vacíos. Agrega al menos un subpunto (1.1) en: ${puntosVacios
+                        .map((p) => p.title)
+                        .join(', ')}`,
+                },
+                { status: 400 }
+            )
+        }
+
         const puntosConTrabajo = mainPoints.filter((p) => !esPuntoSoloEstatus(p.mainPointKey))
-        const estimatedDeliveryAuto =
-            fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || [])) ??
-            calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
+        const maximaFechaSubpuntos = fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || []))
+        const estimatedDeliveryAuto = maximaFechaSubpuntos ?? calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
 
         const nuevaEntregaManual = data.estimatedDeliveryManual ? new Date(data.estimatedDeliveryManual) : null
+
+        // La fecha de entrega (si se ajustó a mano) no puede quedar antes de
+        // que termine el subpunto que más tarda. Esta ruta siempre es sobre
+        // un proyecto ya registrado, así que aplica siempre.
+        if (nuevaEntregaManual && maximaFechaSubpuntos && nuevaEntregaManual < maximaFechaSubpuntos) {
+            return NextResponse.json(
+                {
+                    error: `La fecha de entrega no puede ser anterior al ${maximaFechaSubpuntos.toLocaleDateString(
+                        'es-MX'
+                    )}, que es cuando termina el subpunto que más tarda.`,
+                },
+                { status: 400 }
+            )
+        }
 
         // Para la bitácora: qué cambió de verdad (independiente de si se
         // avisa o no al cliente).

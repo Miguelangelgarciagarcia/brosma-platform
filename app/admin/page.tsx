@@ -5,6 +5,7 @@ import AdminHeader from '@/components/admin/AdminHeader'
 import AdminNav from '@/components/admin/AdminNav'
 import ProjectCard from '@/components/admin/ProjectCard'
 import { getYearRange } from '@/lib/dates'
+import { calcularProgreso, hayAtraso } from '@/lib/progreso'
 
 export default async function AdminPage() {
     const session = await auth()
@@ -31,9 +32,20 @@ export default async function AdminPage() {
                 recordStatus: true,
                 estimatedDeliveryManual: true,
                 estimatedDeliveryAuto: true,
+                phases: {
+                    select: { id: true, parentId: true, mainPointKey: true, status: true, startDate: true, endDate: true },
+                },
             },
         }),
     ])
+
+    // Progreso y atraso se calculan aquí (con las fases ya traídas) en vez de
+    // mandarle el trabajo a cada ProjectCard, para no repetir la consulta.
+    const activosConEstado = activos.map((project) => ({
+        ...project,
+        progreso: calcularProgreso(project.phases),
+        atrasado: hayAtraso(project.phases),
+    }))
 
     return (
         <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
@@ -42,7 +54,7 @@ export default async function AdminPage() {
 
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px' }}>
                 {/* Stat cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '28px' }}>
                     <div
                         style={{
                             background: 'var(--brand-panel-card)',
@@ -121,7 +133,7 @@ export default async function AdminPage() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {activos.map((project) => (
+                        {activosConEstado.map((project) => (
                             <ProjectCard key={project.folio} project={project} />
                         ))}
                     </div>

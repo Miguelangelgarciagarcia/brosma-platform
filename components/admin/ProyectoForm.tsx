@@ -285,6 +285,20 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                         )
                     }
                 }
+
+                // La fecha de entrega (si se ajustó a mano) no puede quedar
+                // antes de que termine el subpunto que más tarda: solo
+                // aplica al registrar, no al guardar como borrador.
+                if (form.estimatedDeliveryManual) {
+                    const entregaManual = new Date(form.estimatedDeliveryManual + 'T00:00:00')
+                    if (entregaManual < fechaSugerida) {
+                        throw new Error(
+                            `La fecha de entrega (${entregaManual.toLocaleDateString('es-MX')}) no puede ser anterior al ${fechaSugerida.toLocaleDateString(
+                                'es-MX'
+                            )}, que es cuando termina el subpunto que más tarda.`
+                        )
+                    }
+                }
             }
 
             // _dataUrl queda definido (aunque sea '') en cuanto FirmaModal
@@ -420,7 +434,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                     <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
                         Datos del cliente
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Nombre completo *</label>
                             <input name="clientName" value={form.clientName} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
@@ -467,7 +481,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                     <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
                         Datos financieros
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Costo</label>
                             <input
@@ -588,14 +602,15 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                                         {index + 1}. {mp.label}
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                                         <select
                                             value={mp.responsibleId}
                                             onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
                                             className="brand-panel-input"
                                             style={inputStyle}
+                                            title="Supervisa este punto, pero no lo inicia ni lo termina: eso lo hace quien esté asignado a cada subpunto de abajo."
                                         >
-                                            <option value="">Responsable...</option>
+                                            <option value="">Encargado...</option>
                                             {trabajadores.map((t) => (
                                                 <option key={t.id} value={t.id}>
                                                     {t.name}
@@ -692,13 +707,13 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
 
                 {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
 
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '32px' }}>
                     <button
                         type="button"
                         disabled={loading !== null}
                         onClick={() => enviar('borrador')}
                         style={{
-                            flex: 1,
+                            flex: '1 1 150px',
                             background: 'var(--brand-panel-card)',
                             border: '1px solid var(--brand-panel-border)',
                             color: 'var(--brand-panel-fg)',
@@ -718,7 +733,7 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                         disabled={loading !== null}
                         onClick={() => enviar('registrado')}
                         style={{
-                            flex: 1,
+                            flex: '1 1 150px',
                             background: 'var(--brand-orange)',
                             border: 'none',
                             color: '#fff',

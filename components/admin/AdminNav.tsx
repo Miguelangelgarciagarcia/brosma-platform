@@ -18,11 +18,11 @@ export default function AdminNav() {
         <nav
             style={{
                 display: 'flex',
+                flexWrap: 'wrap',
                 gap: '4px',
                 padding: '10px 16px',
                 background: 'var(--brand-panel-bg)',
                 borderBottom: '1px solid var(--brand-panel-border)',
-                overflowX: 'auto',
             }}
         >
             {links.map((link) => {

@@ -151,6 +151,14 @@ export default function SeguimientoPage() {
 
     const entregado = resultado?.status === 'entregado'
 
+    // El campo "Entrega estimada" deja de mostrar una fecha en cuanto ya no
+    // tiene caso: si "Listo para Entrega" ya se completó (pero "Entregado"
+    // todavía no), la entrega es inmediata; si "Entregado" ya se completó,
+    // ya no hay nada que estimar, el proyecto ya se entregó.
+    const listoParaEntrega = resultado?.puntos.find((p) => p.key === 'listo_entrega')?.status === 'completado'
+    const yaEntregado = resultado?.puntos.find((p) => p.key === 'entregado')?.status === 'completado'
+    const entregaTexto = yaEntregado ? 'Entregado' : listoParaEntrega ? 'Inmediata' : formatDate(resultado?.entregaEstimada ?? null)
+
     return (
         <main style={{ minHeight: '100vh', background: 'var(--brand-navy-deep)' }}>
             {/* Hero oscuro, misma línea gráfica que el inicio — ahora con Aurora
@@ -337,7 +345,9 @@ export default function SeguimientoPage() {
                         <div
                             style={{
                                 display: 'flex',
+                                flexWrap: 'wrap',
                                 alignItems: 'center',
+                                justifyContent: 'center',
                                 gap: '20px',
                                 background: 'rgba(255,255,255,0.04)',
                                 border: '1px solid rgba(255,255,255,0.08)',
@@ -346,7 +356,7 @@ export default function SeguimientoPage() {
                             }}
                         >
                             <AnilloProgreso progreso={resultado.progreso} entregado={entregado} />
-                            <div>
+                            <div style={{ textAlign: 'center' }}>
                                 <div
                                     style={{
                                         fontFamily: 'var(--font-body)',
@@ -367,7 +377,7 @@ export default function SeguimientoPage() {
                                         marginTop: '4px',
                                     }}
                                 >
-                                    {formatDate(resultado.entregaEstimada)}
+                                    {entregaTexto}
                                 </div>
                             </div>
                         </div>

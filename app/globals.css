@@ -115,6 +115,36 @@ body {
   border-color: rgba(255, 255, 255, 0.32);
 }
 
+/* Parpadeo de alerta para puntos/proyectos atrasados (rojo, distinto del
+   pulso naranja de "en proceso"): se usa tanto en el dashboard de Admin
+   como en el detalle del proyecto y en la vista de trabajador. */
+@keyframes brandBlinkAtraso {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.65), 0 0 0 0 rgba(255, 59, 59, 0.35);
+    border-color: #ff6b6b;
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 59, 59, 0.25), 0 0 24px 6px rgba(255, 59, 59, 0.6);
+    border-color: #ff3b3b;
+  }
+}
+
+/* Puntito/ícono de alerta: parpadea por su cuenta (solo opacidad y escala),
+   para que la alerta se note aunque el glow del card/nodo pase
+   desapercibido contra fondos oscuros con mucho ruido visual. */
+@keyframes brandBlinkDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.7);
+  }
+}
+
 @keyframes brandPulse {
   0%,
   100% {

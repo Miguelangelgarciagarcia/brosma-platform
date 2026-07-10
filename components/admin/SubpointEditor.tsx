@@ -39,6 +39,14 @@ export function esCompletado(node: SubpointNode): boolean {
     return node.status === 'completado'
 }
 
+// Un subpunto ya iniciado por un trabajador (pero todavía sin terminar) ya
+// no se puede reasignar ni recorrer de fecha de inicio: eso cambiaría el
+// trabajo que ya está en curso. Solo se permite ajustar la descripción y la
+// fecha de término.
+export function esEnProceso(node: SubpointNode): boolean {
+    return node.status === 'en_proceso'
+}
+
 // Duración en días naturales (incluye domingos: un subpunto "dura" lo que
 // dura sin importar qué día caiga, a diferencia de la fecha de entrega
 // general que sí brinca domingos).
@@ -163,6 +171,13 @@ export default function SubpointEditor({
                 // se puede editar ni eliminar desde aquí (se protege también
                 // en el servidor, esto es nada más para la UI).
                 const bloqueado = esCompletado(node)
+                // Un subpunto ya iniciado (pero sin terminar) solo permite
+                // ajustar descripción y fecha de término — título,
+                // responsable y fecha de inicio quedan fijos, y tampoco se
+                // puede eliminar (también resguardado en el servidor).
+                const enProceso = esEnProceso(node)
+                const soloDescripcionYFin = enProceso && !bloqueado
+                const noEditable = bloqueado || enProceso
 
                 const fechasInvertidas = !!(node.startDate && node.endDate && node.startDate > node.endDate)
                 const fueraDeRangoPadre = !!(
@@ -185,7 +200,7 @@ export default function SubpointEditor({
                             background: 'rgba(255,255,255,0.03)',
                         }}
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                             <button
                                 type="button"
                                 onClick={() => toggleColapsado(node.clientId)}
@@ -193,10 +208,12 @@ export default function SubpointEditor({
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
+                                    flexWrap: 'wrap',
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
                                     padding: 0,
+                                    minWidth: 0,
                                 }}
                             >
                                 <span style={{ fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>{colapsado ? '▶' : '▼'}</span>
@@ -215,8 +232,8 @@ export default function SubpointEditor({
                                             fontFamily: 'var(--font-body)',
                                             fontSize: '10px',
                                             fontWeight: 700,
-                                            color: 'var(--brand-orange)',
-                                            background: 'rgba(244,123,48,0.15)',
+                                            color: '#ffffff',
+                                            background: 'rgba(255,255,255,0.14)',
                                             borderRadius: '999px',
                                             padding: '2px 8px',
                                         }}
@@ -224,8 +241,23 @@ export default function SubpointEditor({
                                         ✓ Completado
                                     </span>
                                 )}
+                                {enProceso && !bloqueado && (
+                                    <span
+                                        style={{
+                                            fontFamily: 'var(--font-body)',
+                                            fontSize: '10px',
+                                            fontWeight: 700,
+                                            color: 'var(--brand-orange)',
+                                            background: 'rgba(244,123,48,0.15)',
+                                            borderRadius: '999px',
+                                            padding: '2px 8px',
+                                        }}
+                                    >
+                                        ▶ En proceso
+                                    </span>
+                                )}
                             </button>
-                            {!bloqueado && (
+                            {!noEditable && (
                                 <button
                                     type="button"
                                     onClick={() => removeNode(index)}
@@ -248,16 +280,22 @@ export default function SubpointEditor({
                                 Este subpunto ya lo marcó como completado un trabajador: no se puede editar ni eliminar.
                             </p>
                         )}
+                        {!colapsado && soloDescripcionYFin && (
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                                Este subpunto ya está en proceso: solo puedes ajustar la descripción y la fecha de
+                                término. Título, responsable y fecha de inicio quedan fijos, y no se puede eliminar.
+                            </p>
+                        )}
 
                         {!colapsado && (
                             <>
                                 <input
                                     placeholder="Título corto"
                                     value={node.title}
-                                    disabled={bloqueado}
+                                    disabled={noEditable}
                                     onChange={(e) => updateNode(index, { title: e.target.value })}
                                     className="brand-panel-input"
-                                    style={{ ...inputStyle, opacity: bloqueado ? 0.6 : 1 }}
+                                    style={{ ...inputStyle, opacity: noEditable ? 0.6 : 1 }}
                                 />
                                 <textarea
                                     placeholder="Descripción larga (uso interno)"
@@ -269,13 +307,13 @@ export default function SubpointEditor({
                                     style={{ ...inputStyle, resize: 'vertical' as const, opacity: bloqueado ? 0.6 : 1 }}
                                 />
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                                     <select
                                         value={node.responsibleId}
-                                        disabled={bloqueado}
+                                        disabled={noEditable}
                                         onChange={(e) => updateNode(index, { responsibleId: e.target.value })}
                                         className="brand-panel-input"
-                                        style={{ ...inputStyle, opacity: bloqueado ? 0.6 : 1 }}
+                                        style={{ ...inputStyle, opacity: noEditable ? 0.6 : 1 }}
                                     >
                                         <option value="">Responsable...</option>
                                         {trabajadores.map((t) => (
@@ -289,10 +327,10 @@ export default function SubpointEditor({
                                         value={node.startDate}
                                         min={parentStart || undefined}
                                         max={parentEnd || undefined}
-                                        disabled={bloqueado}
+                                        disabled={noEditable}
                                         onChange={(e) => updateNode(index, { startDate: e.target.value })}
                                         className="brand-panel-input"
-                                        style={{ ...inputStyle, colorScheme: 'dark', opacity: bloqueado ? 0.6 : 1 }}
+                                        style={{ ...inputStyle, colorScheme: 'dark', opacity: noEditable ? 0.6 : 1 }}
                                     />
                                     <input
                                         type="date"

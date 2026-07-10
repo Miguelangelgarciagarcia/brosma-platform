@@ -101,7 +101,8 @@ async function reconciliarHijos(
     children: SubpointInput[] | undefined,
     depth: number,
     idsConservados: Set<string>,
-    idsCompletados: Set<string>
+    idsCompletados: Set<string>,
+    idsEnProceso: Set<string>
 ) {
     if (!children || children.length === 0) return
     for (let i = 0; i < children.length; i++) {
@@ -112,7 +113,24 @@ async function reconciliarHijos(
             // toca: ni se actualiza su info ni se borra, aunque el Admin la
             // haya editado o quitado del formulario. Sí se sigue recorriendo
             // hacia sus hijos por si alguno de ellos no está completo.
-            if (!idsCompletados.has(child.id)) {
+            if (idsCompletados.has(child.id)) {
+                // no-op: completado, se deja intacto.
+            } else if (idsEnProceso.has(child.id)) {
+                // Ya lo inició un trabajador: solo se permite ajustar
+                // descripción y fecha de término (también resguardado en la
+                // UI de SubpointEditor). Título, responsable y fecha de
+                // inicio se dejan como están en la BD.
+                await tx.phase.update({
+                    where: { id: child.id },
+                    data: {
+                        parentId,
+                        depth,
+                        order: i,
+                        description: child.description || null,
+                        endDate: child.endDate ? new Date(child.endDate) : null,
+                    },
+                })
+            } else {
                 await tx.phase.update({
                     where: { id: child.id },
                     data: {
@@ -127,7 +145,7 @@ async function reconciliarHijos(
                     },
                 })
             }
-            await reconciliarHijos(tx, projectId, child.id, child.children, depth + 1, idsConservados, idsCompletados)
+            await reconciliarHijos(tx, projectId, child.id, child.children, depth + 1, idsConservados, idsCompletados, idsEnProceso)
         } else {
             // Subpunto agregado en esta edición: no existía, se crea nuevo.
             const creado = await tx.phase.create({
@@ -145,7 +163,7 @@ async function reconciliarHijos(
                 },
             })
             idsConservados.add(creado.id)
-            await reconciliarHijos(tx, projectId, creado.id, child.children, depth + 1, idsConservados, idsCompletados)
+            await reconciliarHijos(tx, projectId, creado.id, child.children, depth + 1, idsConservados, idsCompletados, idsEnProceso)
         }
     }
 }
@@ -172,6 +190,7 @@ export async function actualizarArbolFasesPreservandoProgreso(
         })
         const idsActuales = new Set(actuales.map((p) => p.id))
         const idsCompletados = new Set(actuales.filter((p) => p.status === 'completado').map((p) => p.id))
+        const idsEnProceso = new Set(actuales.filter((p) => p.status === 'en_proceso').map((p) => p.id))
         const idsConservados = new Set<string>()
 
         for (let i = 0; i < mainPoints.length; i++) {
@@ -200,7 +219,7 @@ export async function actualizarArbolFasesPreservandoProgreso(
                     },
                 })
                 idsConservados.add(creado.id)
-                await reconciliarHijos(tx, projectId, creado.id, point.children, 1, idsConservados, idsCompletados)
+                await reconciliarHijos(tx, projectId, creado.id, point.children, 1, idsConservados, idsCompletados, idsEnProceso)
                 continue
             }
 
@@ -211,7 +230,7 @@ export async function actualizarArbolFasesPreservandoProgreso(
                     data: { order: i, responsibleId: point.responsibleId, estimatedDays: point.estimatedDays },
                 })
             }
-            await reconciliarHijos(tx, projectId, mainPhase.id, point.children, 1, idsConservados, idsCompletados)
+            await reconciliarHijos(tx, projectId, mainPhase.id, point.children, 1, idsConservados, idsCompletados, idsEnProceso)
         }
 
         // Cualquier fase que ya no aparezca en el árbol enviado se borra (el

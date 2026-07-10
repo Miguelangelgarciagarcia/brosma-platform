@@ -73,6 +73,7 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
+                animation: retrasado ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
             }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
@@ -84,6 +85,9 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                         {retrasado && (
                             <span
                                 style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
                                     fontFamily: 'var(--font-body)',
                                     fontSize: '10px',
                                     fontWeight: 700,
@@ -93,7 +97,17 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                                     padding: '2px 8px',
                                 }}
                             >
-                                ⚠ Retrasado{!trabajando ? ' · sin iniciar' : ''}
+                                <span
+                                    style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        background: '#ff3b3b',
+                                        flexShrink: 0,
+                                        animation: 'brandBlinkDot 1s ease-in-out infinite',
+                                    }}
+                                />
+                                Retrasado{!trabajando ? ' · sin iniciar' : ''}
                             </span>
                         )}
                         {trabajando && (

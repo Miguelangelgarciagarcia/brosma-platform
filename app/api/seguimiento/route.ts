@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit, trackingRateLimiter } from '@/lib/ratelimit'
+import { calcularProgreso } from '@/lib/progreso'
 
 const bodySchema = z.object({
     folio: z.string().trim().min(3).max(40),
@@ -72,17 +73,9 @@ export async function POST(req: Request) {
         }))
 
         // El % de avance se calcula por "hoja" (la unidad de trabajo más
-        // chica: un subpunto sin hijos, o un punto principal sin subpuntos
-        // como "Listo para Entrega"/"Entregado"), no solo por puntos
-        // principales completos. Así, en cuanto se termina un subpunto ya se
-        // nota en el porcentaje, en vez de esperar a que se complete todo un
-        // punto principal.
-        const idsConHijos = new Set(
-            todasLasFases.map((f) => f.parentId).filter((id): id is string => !!id)
-        )
-        const hojas = todasLasFases.filter((f) => !idsConHijos.has(f.id))
-        const hojasCompletadas = hojas.filter((h) => h.status === 'completado').length
-        const progreso = hojas.length > 0 ? Math.round((hojasCompletadas / hojas.length) * 100) : 0
+        // chica: un subpunto sin hijos), con los tramos finales de cierre
+        // (95/99/100) — ver lib/progreso.ts para el detalle.
+        const progreso = calcularProgreso(todasLasFases)
 
         return NextResponse.json({
             folio: project.folio,

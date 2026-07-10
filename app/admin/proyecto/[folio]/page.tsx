@@ -111,7 +111,7 @@ export default async function ProyectoDetallePage({
                             {project.email ? ` · ${project.email}` : ''}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         {project.recordStatus === 'borrador' && (
                             <Link href={`/admin/proyecto/${project.folio}/editar`} style={actionLinkStyle}>
                                 Editar
@@ -141,13 +141,30 @@ export default async function ProyectoDetallePage({
                                 Ver PDF
                             </a>
                         )}
+                        {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
+                            <a
+                                href={`/api/proyectos/${project.folio}/gantt`}
+                                style={{
+                                    fontFamily: 'var(--font-body)',
+                                    fontSize: '12px',
+                                    color: 'var(--brand-panel-fg)',
+                                    border: '1px solid var(--brand-panel-border)',
+                                    borderRadius: '6px',
+                                    padding: '8px 14px',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                Descargar diagrama Gantt
+                            </a>
+                        )}
                     </div>
                 </div>
 
                 <div
                     style={{
                         display: 'grid',
-                        gridTemplateColumns: '1fr 1fr 1fr',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                         gap: '10px',
                         background: 'var(--brand-panel-card)',
                         border: '1px solid var(--brand-panel-border)',
@@ -211,6 +228,7 @@ export default async function ProyectoDetallePage({
                             title: project.title,
                             clientName: project.clientName,
                             email: project.email,
+                            estimatedDelivery: entrega,
                         }}
                     />
                 </div>

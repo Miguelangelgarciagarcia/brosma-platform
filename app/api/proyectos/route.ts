@@ -74,6 +74,27 @@ export async function POST(req: Request) {
             )
         }
 
+        // Al registrar en definitiva, ningún punto de trabajo puede quedar
+        // vacío: necesita al menos un subpunto (1.1). Esto ya se valida en
+        // el formulario, pero se resguarda también aquí por si algo llega
+        // directo a la API. No aplica a "Listo para Entrega"/"Entregado",
+        // que nunca llevan subpuntos.
+        if (data.recordStatus === 'registrado') {
+            const puntosVacios = mainPoints.filter(
+                (p) => !esPuntoSoloEstatus(p.mainPointKey) && (!p.children || p.children.length === 0)
+            )
+            if (puntosVacios.length > 0) {
+                return NextResponse.json(
+                    {
+                        error: `No puedes registrar el proyecto con puntos vacíos. Agrega al menos un subpunto (1.1) en: ${puntosVacios
+                            .map((p) => p.title)
+                            .join(', ')}`,
+                    },
+                    { status: 400 }
+                )
+            }
+        }
+
         const folio = await generarFolioUnico()
 
         // Solo los puntos con trabajo real (los primeros 4) cuentan para la
@@ -82,9 +103,24 @@ export async function POST(req: Request) {
         // ninguna fecha capturada (ej. borrador temprano), se cae de
         // respaldo al cálculo por suma de días hábiles.
         const puntosConTrabajo = mainPoints.filter((p) => !esPuntoSoloEstatus(p.mainPointKey))
-        const estimatedDeliveryAuto =
-            fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || [])) ??
-            calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
+        const maximaFechaSubpuntos = fechaMasTardiaDeSubpuntos(puntosConTrabajo.flatMap((p) => p.children || []))
+        const estimatedDeliveryAuto = maximaFechaSubpuntos ?? calcularFechaEntregaSugerida(puntosConTrabajo.map((p) => p.estimatedDays))
+
+        // La fecha de entrega (si se ajustó a mano) no puede quedar antes de
+        // que termine el subpunto que más tarda. Solo aplica al registrar en
+        // definitiva; guardar como borrador puede quedar inconsistente
+        // mientras se sigue editando.
+        const entregaManual = data.estimatedDeliveryManual ? new Date(data.estimatedDeliveryManual) : null
+        if (data.recordStatus === 'registrado' && entregaManual && maximaFechaSubpuntos && entregaManual < maximaFechaSubpuntos) {
+            return NextResponse.json(
+                {
+                    error: `La fecha de entrega no puede ser anterior al ${maximaFechaSubpuntos.toLocaleDateString(
+                        'es-MX'
+                    )}, que es cuando termina el subpunto que más tarda.`,
+                },
+                { status: 400 }
+            )
+        }
 
         const project = await prisma.project.create({
             data: {
@@ -102,9 +138,7 @@ export async function POST(req: Request) {
                 clientSignature: data.clientSignature || null,
                 receiverSignature: data.receiverSignature || null,
                 estimatedDeliveryAuto,
-                estimatedDeliveryManual: data.estimatedDeliveryManual
-                    ? new Date(data.estimatedDeliveryManual)
-                    : null,
+                estimatedDeliveryManual: entregaManual,
                 clientCanSeeSubpoints: data.clientCanSeeSubpoints,
                 status: 'en_proceso',
                 createdById: session.user.id,

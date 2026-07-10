@@ -21,6 +21,28 @@ export function hoyUTC(): Date {
     return new Date(hoyStr + 'T00:00:00.000Z')
 }
 
+// Un punto/subpunto está "atrasado" cuando:
+// - ya debió haber terminado (pasó su fecha de fin) y no está completado, o
+// - ya debió haber iniciado (pasó su fecha de inicio) y sigue "pendiente"
+//   (nadie lo ha marcado como iniciado).
+// Los puntos principales normales nunca tienen fecha propia (solo sus
+// subpuntos la tienen), así que esta función siempre da `false` para ellos
+// — lo cual es correcto: un punto principal nunca está atrasado "por sí
+// mismo", solo puede contener subpuntos atrasados.
+export function estaAtrasada(
+    fase: { status: string; startDate?: Date | string | null; endDate?: Date | string | null },
+    hoy: Date = hoyUTC()
+): boolean {
+    if (fase.status === 'completado') return false
+
+    const start = fase.startDate ? new Date(fase.startDate) : null
+    const end = fase.endDate ? new Date(fase.endDate) : null
+
+    if (end && hoy > end) return true
+    if (start && hoy >= start && fase.status === 'pendiente') return true
+    return false
+}
+
 export function formatDate(date: Date | string | null | undefined): string {
     if (!date) return '—'
     const d = typeof date === 'string' ? new Date(date) : date

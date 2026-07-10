@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ConfirmarCorreoModal from '@/components/admin/ConfirmarCorreoModal'
+import { formatDate, hoyUTC } from '@/lib/dates'
 
 type Props = {
     phaseId: string
@@ -15,6 +16,7 @@ type Props = {
         title: string
         clientName: string
         email: string | null
+        estimatedDelivery: Date | string | null
     }
 }
 
@@ -50,8 +52,18 @@ export default function MarcarEstatusButton({ phaseId, mainPointKey, proyecto }:
 
     function abrirConfirmacion() {
         if (!proyecto) return
+
+        // Si el día de hoy cae antes de la fecha que se tenía acordada con
+        // el cliente, se le hace saber en el mismo correo (el Admin puede
+        // editar o quitar esta línea antes de mandarlo, como el resto del
+        // mensaje).
+        const fechaAcordada = proyecto.estimatedDelivery ? new Date(proyecto.estimatedDelivery) : null
+        const hoy = hoyUTC()
+        const adelantado = !!fechaAcordada && hoy < fechaAcordada
+
         const lineas = [
             `Hola ${proyecto.clientName}, tu proyecto "${proyecto.title}" (folio ${proyecto.folio}) ya está listo para entrega.`,
+            ...(adelantado ? ['', `Buenas noticias: quedó listo antes de lo acordado (se tenía estimado para el ${formatDate(fechaAcordada)}).`] : []),
             '',
             'Cualquier duda, contáctanos.',
             '',

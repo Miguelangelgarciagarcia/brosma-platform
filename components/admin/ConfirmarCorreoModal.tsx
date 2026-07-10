@@ -52,10 +52,13 @@ export default function ConfirmarCorreoModal({
                     borderRadius: '16px',
                     width: '100%',
                     maxWidth: '480px',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
                     padding: '20px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px',
+                    boxSizing: 'border-box',
                 }}
             >
                 <div>
@@ -93,7 +96,7 @@ export default function ConfirmarCorreoModal({
                         onClick={onCancelar}
                         disabled={enviando}
                         style={{
-                            flex: 1,
+                            flex: '1 1 120px',
                             fontFamily: 'var(--font-body)',
                             border: '1px solid var(--brand-panel-border)',
                             color: 'var(--brand-panel-fg2)',
@@ -111,7 +114,7 @@ export default function ConfirmarCorreoModal({
                         onClick={() => onConfirmar(false)}
                         disabled={enviando}
                         style={{
-                            flex: 1,
+                            flex: '1 1 120px',
                             fontFamily: 'var(--font-body)',
                             border: '1px solid var(--brand-panel-border)',
                             color: 'var(--brand-panel-fg)',
@@ -129,7 +132,7 @@ export default function ConfirmarCorreoModal({
                         onClick={() => onConfirmar(true)}
                         disabled={enviando || !destinatario}
                         style={{
-                            flex: 1,
+                            flex: '1 1 120px',
                             fontFamily: 'var(--font-body)',
                             border: 'none',
                             color: '#fff',

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import ProyectoAccordion from '@/components/trabajo/ProyectoAccordion'
+import AmiCargoList from '@/components/trabajo/AmiCargoList'
 
 type FaseConFlags = {
     id: string
@@ -23,17 +24,31 @@ type Grupo = {
     fases: FaseConFlags[]
 }
 
+type SubpuntoACargo = { id: string; label: string; title: string; status: string; responsableName: string; atrasado: boolean }
+type PuntoACargo = { id: string; label: string; title: string; status: string; atrasado: boolean; subpuntos: SubpuntoACargo[] }
+type GrupoACargo = { folio: string; title: string; clientName: string; puntos: PuntoACargo[] }
+
 type Props = {
     pendientes: Grupo[]
     completados: Grupo[]
     totalPendientes: number
     totalCompletados: number
+    // Puntos principales de los que el usuario es encargado (solo lectura).
+    aCargo: GrupoACargo[]
+    totalACargo: number
 }
 
-export default function PendientesFinalizadosTabs({ pendientes, completados, totalPendientes, totalCompletados }: Props) {
-    const [tab, setTab] = useState<'pendientes' | 'finalizados'>('pendientes')
+export default function PendientesFinalizadosTabs({
+    pendientes,
+    completados,
+    totalPendientes,
+    totalCompletados,
+    aCargo,
+    totalACargo,
+}: Props) {
+    const [tab, setTab] = useState<'pendientes' | 'finalizados' | 'a_cargo'>('pendientes')
 
-    const grupos = tab === 'pendientes' ? pendientes : completados
+    const grupos = tab === 'pendientes' ? pendientes : tab === 'finalizados' ? completados : null
 
     return (
         <div>
@@ -46,6 +61,7 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     borderRadius: '10px',
                     padding: '4px',
                     marginBottom: '14px',
+                    flexWrap: 'wrap',
                 }}
             >
                 <button
@@ -53,6 +69,7 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     onClick={() => setTab('pendientes')}
                     style={{
                         flex: 1,
+                        minWidth: '90px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '13px',
                         fontWeight: 700,
@@ -71,6 +88,7 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     onClick={() => setTab('finalizados')}
                     style={{
                         flex: 1,
+                        minWidth: '90px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '13px',
                         fontWeight: 700,
@@ -84,9 +102,30 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                 >
                     Finalizados ({totalCompletados})
                 </button>
+                <button
+                    type="button"
+                    onClick={() => setTab('a_cargo')}
+                    style={{
+                        flex: 1,
+                        minWidth: '90px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        padding: '8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: tab === 'a_cargo' ? 'var(--brand-orange)' : 'none',
+                        color: tab === 'a_cargo' ? '#fff' : 'var(--brand-panel-fg2)',
+                    }}
+                >
+                    A mi cargo ({totalACargo})
+                </button>
             </div>
 
-            {grupos.length === 0 ? (
+            {tab === 'a_cargo' ? (
+                <AmiCargoList grupos={aCargo} />
+            ) : grupos && grupos.length === 0 ? (
                 <div
                     style={{
                         background: 'var(--brand-panel-card)',
@@ -102,7 +141,7 @@ export default function PendientesFinalizadosTabs({ pendientes, completados, tot
                     {tab === 'pendientes' ? 'No tienes puntos pendientes por ahora.' : 'Todavía no terminas ningún punto.'}
                 </div>
             ) : (
-                <ProyectoAccordion grupos={grupos} />
+                grupos && <ProyectoAccordion grupos={grupos} />
             )}
         </div>
     )

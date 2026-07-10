@@ -18,12 +18,13 @@ export default function AdminHeader({ userName, userRole }: AdminHeaderProps) {
                 borderBottom: '1px solid var(--brand-panel-border)',
                 padding: '14px 20px',
                 display: 'flex',
+                flexWrap: 'wrap',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '12px',
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                 <div
                     style={{
                         width: '10px',
@@ -46,14 +47,17 @@ export default function AdminHeader({ userName, userRole }: AdminHeaderProps) {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
                 {userName && (
                     <span
                         style={{
                             fontFamily: 'var(--font-body)',
                             fontSize: '12px',
                             color: 'var(--brand-white-65)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
+                            maxWidth: '160px',
                         }}
                     >
                         {userName} · {userRole}

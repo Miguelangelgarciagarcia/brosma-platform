@@ -278,6 +278,19 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                 }
             }
 
+            // La fecha de entrega (si se ajustó a mano) no puede quedar
+            // antes de que termine el subpunto que más tarda.
+            if (form.estimatedDeliveryManual) {
+                const entregaManual = new Date(form.estimatedDeliveryManual + 'T00:00:00')
+                if (entregaManual < fechaSugerida) {
+                    throw new Error(
+                        `La fecha de entrega (${entregaManual.toLocaleDateString('es-MX')}) no puede ser anterior al ${fechaSugerida.toLocaleDateString(
+                            'es-MX'
+                        )}, que es cuando termina el subpunto que más tarda.`
+                    )
+                }
+            }
+
             const clientDataUrl = (clienteSigRef as any)._dataUrl
             const clientSig = clientDataUrl !== undefined ? clientDataUrl : initial.clientSignature || ''
             const receiverDataUrl = (receptorSigRef as any)._dataUrl
@@ -399,7 +412,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                     <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
                         Datos del cliente
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Nombre completo *</label>
                             <input name="clientName" value={form.clientName} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
@@ -442,7 +455,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                     <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
                         Datos financieros
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Costo</label>
                             <input
@@ -523,6 +536,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             if (esPuntoSoloEstatus(mp.mainPointKey)) return null
                             const dias = diasCalculados(mp.children)
                             const mpBloqueado = mp.status === 'completado'
+                            const mpEnProceso = mp.status === 'en_proceso'
                             return (
                                 <div
                                     key={mp.mainPointKey}
@@ -553,8 +567,8 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                     fontFamily: 'var(--font-body)',
                                                     fontSize: '10px',
                                                     fontWeight: 700,
-                                                    color: 'var(--brand-orange)',
-                                                    background: 'rgba(244,123,48,0.15)',
+                                                    color: '#ffffff',
+                                                    background: 'rgba(255,255,255,0.14)',
                                                     borderRadius: '999px',
                                                     padding: '2px 8px',
                                                 }}
@@ -562,16 +576,32 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                 ✓ Completado
                                             </span>
                                         )}
+                                        {mpEnProceso && (
+                                            <span
+                                                style={{
+                                                    fontFamily: 'var(--font-body)',
+                                                    fontSize: '10px',
+                                                    fontWeight: 700,
+                                                    color: 'var(--brand-orange)',
+                                                    background: 'rgba(244,123,48,0.15)',
+                                                    borderRadius: '999px',
+                                                    padding: '2px 8px',
+                                                }}
+                                            >
+                                                ▶ En proceso
+                                            </span>
+                                        )}
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
                                         <select
                                             value={mp.responsibleId}
                                             disabled={mpBloqueado}
                                             onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
                                             className="brand-panel-input"
                                             style={{ ...inputStyle, opacity: mpBloqueado ? 0.6 : 1 }}
+                                            title="Supervisa este punto, pero no lo inicia ni lo termina: eso lo hace quien esté asignado a cada subpunto de abajo."
                                         >
-                                            <option value="">Responsable...</option>
+                                            <option value="">Encargado...</option>
                                             {trabajadores.map((t) => (
                                                 <option key={t.id} value={t.id}>
                                                     {t.name}
