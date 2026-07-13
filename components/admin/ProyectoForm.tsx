@@ -6,8 +6,66 @@ import Link from 'next/link'
 import SignatureCanvas from 'react-signature-canvas'
 import FirmaModal from '@/components/FirmaModal'
 import SubpointEditor, { SubpointNode, nuevoSubpunto, duracionDias, nodoCompleto } from '@/components/admin/SubpointEditor'
+import CargarModeloModal from '@/components/admin/CargarModeloModal'
 import { esPuntoSoloEstatus, CatalogoPunto } from '@/lib/main-points'
 import { calcularFechaEntregaSugerida, fechaMasTardiaDeSubpuntos } from '@/lib/business-days'
+import { hoyUTC } from '@/lib/dates'
+
+// Estructura que devuelve GET /api/proyectos/[folio]/modelo: un punto
+// principal identificado por su TEXTO (no por mainPointKey ni posición: el
+// key es un snapshot que se pierde si el punto se borra y se vuelve a
+// crear en el catálogo, aunque se llame igual), con su encargado y el
+// árbol completo de subpuntos ya en formato de <input type="date">
+// (string "YYYY-MM-DD").
+type NodoModelo = {
+    title: string
+    description: string
+    responsibleId: string
+    startDate: string
+    endDate: string
+    children: NodoModelo[]
+}
+type MainPointModelo = { title: string; responsibleId: string; children: NodoModelo[] }
+
+// Normaliza texto para comparar puntos principales por nombre sin que
+// falle por mayúsculas, acentos o espacios de más (ej. "Compras" vs
+// "compras " vs "COMPRAS" deben matchear igual).
+function normalizarTexto(t: string): string {
+    return t
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+}
+
+// Todas las fechas se guardan como medianoche UTC del día elegido (mismo
+// criterio que lib/dates.ts): se parsean/reconstruyen siempre en UTC para
+// no correr un día por el huso horario del navegador.
+function parseFechaUTC(f: string): number {
+    return new Date(f + 'T00:00:00Z').getTime()
+}
+function formatFechaUTC(t: number): string {
+    return new Date(t).toISOString().slice(0, 10)
+}
+
+// Clona el árbol de un modelo hacia nodos SubpointNode nuevos (clientId
+// fresco, sin id/status: se tratan como subpuntos nuevos de este proyecto),
+// recorriendo todas sus fechas por el mismo desfase para que el subpunto
+// más temprano de TODO el modelo arranque hoy, conservando el espaciado
+// relativo entre los demás.
+function clonarNodosModelo(nodes: NodoModelo[], shiftMs: number): SubpointNode[] {
+    return nodes.map((n) => ({
+        clientId: Math.random().toString(36).slice(2),
+        id: undefined,
+        status: undefined,
+        title: n.title,
+        description: n.description,
+        responsibleId: n.responsibleId,
+        startDate: n.startDate ? formatFechaUTC(parseFechaUTC(n.startDate) + shiftMs) : '',
+        endDate: n.endDate ? formatFechaUTC(parseFechaUTC(n.endDate) + shiftMs) : '',
+        children: clonarNodosModelo(n.children, shiftMs),
+    }))
+}
 
 type MainPointState = {
     mainPointKey: string
@@ -139,6 +197,8 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
     const [loading, setLoading] = useState<'borrador' | 'registrado' | null>(null)
     const [error, setError] = useState('')
     const [trabajadores, setTrabajadores] = useState<{ id: string; name: string }[]>([])
+    const [modeloAbierto, setModeloAbierto] = useState(false)
+    const [cargandoModelo, setCargandoModelo] = useState(false)
 
     const [form, setForm] = useState({
         title: initial?.title ?? '',
@@ -195,6 +255,76 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
 
     function updateMainPoint(index: number, patch: Partial<MainPointState>) {
         setMainPoints((prev) => prev.map((mp, i) => (i === index ? { ...mp, ...patch } : mp)))
+    }
+
+    // "Cargar modelo": trae la estructura de un proyecto ya registrado y la
+    // copia hacia este, punto por punto, haciendo match por TEXTO (no por
+    // mainPointKey ni por posición): si "Compras" era el punto 2 allá y hoy
+    // es el 3 en el catálogo actual, su contenido se copia igual al 3 de
+    // aquí porque ambos se llaman "Compras" — esto también sigue
+    // funcionando si el punto se borró y se volvió a crear en el catálogo
+    // (lo cual le cambia el mainPointKey pero no el nombre). Un punto
+    // principal actual sin ninguna coincidencia en el modelo simplemente se
+    // queda como está (vacío, si es un proyecto nuevo).
+    async function aplicarModelo(folioModelo: string) {
+        setCargandoModelo(true)
+        try {
+            const res = await fetch(`/api/proyectos/${folioModelo}/modelo`)
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'No se pudo cargar el modelo')
+
+            const modeloPorTexto = new Map<string, MainPointModelo>(
+                (data.mainPoints as MainPointModelo[]).map((mp) => [normalizarTexto(mp.title), mp])
+            )
+
+            const puntosConMatch = mainPoints.filter((mp) => modeloPorTexto.has(normalizarTexto(mp.label)))
+            const yaHayDatos = puntosConMatch.some((mp) => mp.responsibleId || mp.children.length > 0)
+            if (yaHayDatos) {
+                const ok = window.confirm(
+                    'Ya hay datos capturados en algunos de los puntos que este modelo va a reemplazar. ¿Quieres continuar y sobrescribirlos?'
+                )
+                if (!ok) {
+                    setCargandoModelo(false)
+                    return
+                }
+            }
+
+            // Desfase único para TODO el modelo: se calcula sobre la fecha
+            // más temprana de cualquier subpunto en cualquier punto
+            // principal, para que arranque hoy conservando el espaciado
+            // relativo entre puntos (no se recorre punto por punto por
+            // separado).
+            const todasLasFechas: string[] = []
+            function recolectarFechas(nodes: NodoModelo[]) {
+                for (const n of nodes) {
+                    if (n.startDate) todasLasFechas.push(n.startDate)
+                    recolectarFechas(n.children)
+                }
+            }
+            for (const mp of data.mainPoints as MainPointModelo[]) recolectarFechas(mp.children)
+
+            const shiftMs =
+                todasLasFechas.length > 0
+                    ? hoyUTC().getTime() - Math.min(...todasLasFechas.map(parseFechaUTC))
+                    : 0
+
+            setMainPoints((prev) =>
+                prev.map((mp) => {
+                    const match = modeloPorTexto.get(normalizarTexto(mp.label))
+                    if (!match) return mp
+                    return {
+                        ...mp,
+                        responsibleId: match.responsibleId,
+                        children: clonarNodosModelo(match.children, shiftMs),
+                    }
+                })
+            )
+            setModeloAbierto(false)
+        } catch (err: any) {
+            alert(err.message || 'Error al cargar el modelo')
+        } finally {
+            setCargandoModelo(false)
+        }
     }
 
     function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -566,9 +696,31 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                 </section>
 
                 <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
-                        Puntos principales y fases
-                    </h2>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                            Puntos principales y fases
+                        </h2>
+                        {mode === 'crear' && (
+                            <button
+                                type="button"
+                                onClick={() => setModeloAbierto(true)}
+                                style={{
+                                    fontFamily: 'var(--font-body)',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    color: 'var(--brand-panel-fg)',
+                                    background: 'none',
+                                    border: '1px solid var(--brand-panel-border)',
+                                    borderRadius: '6px',
+                                    padding: '6px 12px',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                Cargar modelo
+                            </button>
+                        )}
+                    </div>
                     <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
                         Aquí se configuran los puntos de trabajo del catálogo (ver Configuración). "Listo para
                         Entrega" y "Entregado" son banderas de estatus que se marcan después, directo desde el
@@ -750,6 +902,14 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos }: P
                     </button>
                 </div>
             </div>
+
+            {modeloAbierto && (
+                <CargarModeloModal
+                    onElegir={aplicarModelo}
+                    onCerrar={() => setModeloAbierto(false)}
+                    cargando={cargandoModelo}
+                />
+            )}
         </main>
     )
 }
