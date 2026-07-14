@@ -473,6 +473,13 @@ a.admin-project-row:hover {
   justify-content: space-between;
   gap: 16px;
   animation: brandFadeIn 0.6s ease both;
+  /* z-index explícito (no solo position:relative en el inline style): sin
+     esto, el contenido de abajo (hero navy + stat cards, con sus propias
+     animaciones de entrada) puede terminar en una capa de composición que
+     el navegador pinta encima del menú móvil desplegable pese a que ese
+     panel también tiene z-index. Forzar aquí un stacking context de mayor
+     jerarquía resuelve el problema de raíz para header y menú móvil juntos. */
+  z-index: 50;
 }
 
 .admin-topbar-nav {

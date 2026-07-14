@@ -2,24 +2,24 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import AccountModal from '@/components/AccountModal'
 
-// Links completos: se usan en el panel móvil (incluye "Mi cuenta" como
-// entrada normal de la lista). En escritorio "Mi cuenta" no se repite como
-// pill aparte — ver deskLinks abajo — porque ese destino ya se abre al
-// tocar el bloque de usuario (avatar + nombre/rol).
+// Rutas reales de navegación. "Mi cuenta" ya no es una ruta a la que se
+// navega — ver accountPillStyle/AccountModal abajo — se abre como modal
+// flotante encima de la pantalla donde ya está el usuario, tanto en
+// escritorio (clic en avatar/nombre) como en móvil (entrada del menú).
 const links = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/nuevo', label: 'Registrar' },
     { href: '/admin/historial', label: 'Historial' },
     { href: '/admin/configuracion', label: 'Configuración' },
-    { href: '/cuenta', label: 'Mi cuenta' },
 ]
-
-const deskLinks = links.filter((link) => link.href !== '/cuenta')
 
 type AdminNavProps = {
     userName?: string | null
+    userEmail?: string | null
     userRole?: string | null
     // Server action de signOut, definida en AdminHeader (server component) y
     // pasada aquí como prop — Next.js permite mandar server actions a un
@@ -30,11 +30,33 @@ type AdminNavProps = {
 // Navegación + bloque de usuario/salir del panel interno. En escritorio: nav
 // centrado en la barra (AdminHeader la coloca en grid de 3 columnas) y el
 // bloque de usuario a la derecha, donde tocar el avatar/nombre abre "Mi
-// cuenta". En móvil colapsa todo (incluyendo Mi cuenta y Salir) dentro de un
-// menú hamburguesa.
-export default function AdminNav({ userName, userRole, signOutAction }: AdminNavProps) {
+// cuenta" (modal, sin navegar). En móvil colapsa todo (incluyendo Mi cuenta
+// y Salir) dentro de un menú hamburguesa.
+export default function AdminNav({ userName, userEmail, userRole, signOutAction }: AdminNavProps) {
     const pathname = usePathname()
     const [open, setOpen] = useState(false)
+    const [accountOpen, setAccountOpen] = useState(false)
+    const [panelTop, setPanelTop] = useState(0)
+
+    // El menú móvil se saca del árbol del header con un portal (ver más
+    // abajo): la misma clase de bug que ya vimos en AccountModal — el hero
+    // navy + stat cards de abajo, con sus propias animaciones de entrada,
+    // pueden terminar en una capa de composición que el navegador pinta por
+    // encima del menú desplegable aunque z-index diga lo contrario. Portal a
+    // <body> + position:fixed evita el problema de raíz. Como ya no es un
+    // hijo posicionado del header (top:100% relativo a él), medimos dónde
+    // termina el header para colocarlo justo debajo, y bloqueamos el scroll
+    // mientras está abierto para que esa medición no se desactualice.
+    useEffect(() => {
+        if (!open) return
+        const header = document.getElementById('admin-header-bar')
+        if (header) setPanelTop(header.getBoundingClientRect().bottom)
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = previousOverflow
+        }
+    }, [open])
 
     const iniciales = (userName || '?')
         .trim()
@@ -129,7 +151,7 @@ export default function AdminNav({ userName, userRole, signOutAction }: AdminNav
             {/* Escritorio: nav centrado (AdminHeader lo ubica vía CSS grid,
                 ver .admin-topbar-nav en globals.css). Oculto en móvil. */}
             <nav className="admin-topbar-nav">
-                {deskLinks.map((link) => (
+                {links.map((link) => (
                     <Link key={link.href} href={link.href} className="admin-nav-pill" style={pillStyle(pathname === link.href)}>
                         {link.label}
                     </Link>
@@ -137,18 +159,29 @@ export default function AdminNav({ userName, userRole, signOutAction }: AdminNav
             </nav>
 
             {/* Escritorio: usuario + salir, a la derecha. El avatar/nombre
-                es un link a "Mi cuenta" (ya no hay pill aparte para eso).
+                abre "Mi cuenta" como modal (ya no navega a otra página).
                 Oculto en móvil. */}
             <div className="admin-topbar-user">
                 {userName && (
-                    <Link
-                        href="/cuenta"
+                    <button
+                        type="button"
+                        onClick={() => setAccountOpen(true)}
                         className="admin-account-link"
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, textDecoration: 'none' }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            minWidth: 0,
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                        }}
                     >
                         <Avatar />
                         <NameRole />
-                    </Link>
+                    </button>
                 )}
                 <SalirButton />
             </div>
@@ -184,10 +217,13 @@ export default function AdminNav({ userName, userRole, signOutAction }: AdminNav
                 )}
             </button>
 
-            {/* Panel desplegable móvil: nav completo (incluye Mi cuenta) +
-                usuario + salir apilados. */}
-            {open && (
-                <div className="admin-mobile-panel">
+            {/* Panel desplegable móvil: nav completo + usuario/salir apilados.
+                El avatar/nombre es el único punto de entrada a "Mi cuenta"
+                (igual que en escritorio) — nada de repetir un pill aparte.
+                Portal a <body> (ver comentario junto al useEffect de arriba)
+                con position:fixed anclado justo debajo del header medido. */}
+            {open && createPortal(
+                <div className="admin-mobile-panel" style={{ position: 'fixed', top: panelTop, left: 0, right: 0, zIndex: 9999 }}>
                     <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '14px' }}>
                         {links.map((link) => (
                             <Link
@@ -211,14 +247,42 @@ export default function AdminNav({ userName, userRole, signOutAction }: AdminNav
                         }}
                     >
                         {userName && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setOpen(false)
+                                    setAccountOpen(true)
+                                }}
+                                className="admin-account-link"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    minWidth: 0,
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                }}
+                            >
                                 <Avatar />
                                 <NameRole />
-                            </div>
+                            </button>
                         )}
                         <SalirButton full />
                     </div>
-                </div>
+                </div>,
+                document.body,
+            )}
+
+            {accountOpen && (
+                <AccountModal
+                    userName={userName}
+                    userEmail={userEmail}
+                    userRole={userRole}
+                    onClose={() => setAccountOpen(false)}
+                />
             )}
         </>
     )

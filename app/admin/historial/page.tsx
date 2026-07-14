@@ -41,7 +41,7 @@ export default async function HistorialPage({
 
     return (
         <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
-            <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
+            <AdminHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} />
 
             {/* Hero navy: mismo patrón que el dashboard (app/admin/page.tsx)
                 — título arriba, padding extra abajo para que el stat card

@@ -1,10 +1,10 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import AdminHeader from '@/components/admin/AdminHeader'
 import UserForm from '@/components/admin/UserForm'
 import MainPointCatalogManager from '@/components/admin/MainPointCatalogManager'
+import CambiarContrasenaButton from '@/components/admin/CambiarContrasenaButton'
 import { formatDate } from '@/lib/dates'
 import { obtenerCatalogoCompleto } from '@/lib/main-point-catalog'
 
@@ -48,7 +48,7 @@ export default async function ConfiguracionPage() {
 
     return (
         <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
-            <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
+            <AdminHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} />
 
             {/* Hero navy: mismo patrón que dashboard/historial. */}
             <section
@@ -78,24 +78,12 @@ export default async function ConfiguracionPage() {
                         </h1>
                     </div>
 
-                    <Link
-                        href="/cuenta"
+                    <CambiarContrasenaButton
+                        userName={session.user?.name}
+                        userEmail={session.user?.email}
+                        userRole={session.user?.role}
                         className="admin-fade-up admin-fade-delay-1"
-                        style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            color: '#ffffff',
-                            background: 'var(--brand-orange)',
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '11px 18px',
-                            textDecoration: 'none',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        Cambiar mi contraseña →
-                    </Link>
+                    />
                 </div>
             </section>
 

@@ -6,7 +6,8 @@ import PasswordInput from '@/components/PasswordInput'
 const labelStyle: React.CSSProperties = {
     fontFamily: 'var(--font-body)',
     fontSize: '11px',
-    color: 'var(--brand-panel-fg2)',
+    fontWeight: 600,
+    color: 'var(--admin-text-secondary)',
     display: 'block',
     marginBottom: '4px',
 }
@@ -14,11 +15,11 @@ const labelStyle: React.CSSProperties = {
 const passwordInputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--brand-panel-input)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '6px',
+    background: '#ffffff',
+    border: '1px solid var(--admin-card-border)',
+    borderRadius: '10px',
     padding: '10px 40px 10px 12px',
-    color: 'var(--brand-panel-fg)',
+    color: 'var(--admin-text-primary)',
     fontFamily: 'var(--font-body)',
     fontSize: '14px',
 }
@@ -66,30 +67,14 @@ export default function ChangePasswordForm() {
     }
 
     return (
-        <form
-            onSubmit={onSubmit}
-            style={{
-                background: 'var(--brand-panel-card)',
-                border: '1px solid var(--brand-panel-border)',
-                borderRadius: '12px',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                maxWidth: '360px',
-            }}
-        >
-            <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg)' }}>
-                Cambiar contraseña
-            </h2>
-
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
                 <label style={labelStyle}>Contraseña actual</label>
                 <PasswordInput
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="brand-panel-input"
+                    className="admin-input"
                     style={passwordInputStyle}
                 />
             </div>
@@ -101,7 +86,7 @@ export default function ChangePasswordForm() {
                     minLength={8}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="brand-panel-input"
+                    className="admin-input"
                     style={passwordInputStyle}
                 />
             </div>
@@ -113,14 +98,38 @@ export default function ChangePasswordForm() {
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="brand-panel-input"
+                    className="admin-input"
                     style={passwordInputStyle}
                 />
             </div>
 
-            {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && (
+                <p
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        color: 'var(--admin-icon-red-fg)',
+                        background: 'var(--admin-icon-red-bg)',
+                        borderRadius: '8px',
+                        padding: '8px 10px',
+                        fontSize: '12.5px',
+                        margin: 0,
+                    }}
+                >
+                    {error}
+                </p>
+            )}
             {ok && (
-                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--brand-orange)', fontSize: '13px', margin: 0 }}>
+                <p
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        color: 'var(--admin-success-fg)',
+                        background: 'var(--admin-success-bg)',
+                        borderRadius: '8px',
+                        padding: '8px 10px',
+                        fontSize: '12.5px',
+                        margin: 0,
+                    }}
+                >
                     Contraseña actualizada correctamente.
                 </p>
             )}
@@ -132,10 +141,11 @@ export default function ChangePasswordForm() {
                     background: 'var(--brand-orange)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '10px',
                     padding: '12px',
                     fontFamily: 'var(--font-body)',
                     fontWeight: 700,
+                    fontSize: '13px',
                     cursor: 'pointer',
                     opacity: loading ? 0.6 : 1,
                 }}

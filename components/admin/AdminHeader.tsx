@@ -3,6 +3,7 @@ import AdminNav from '@/components/admin/AdminNav'
 
 type AdminHeaderProps = {
     userName?: string | null
+    userEmail?: string | null
     userRole?: string | null
 }
 
@@ -10,9 +11,10 @@ type AdminHeaderProps = {
 // barra navy con el logo a la izquierda y, junto a él, la navegación +
 // usuario + salir (AdminNav, client component: necesita usePathname para
 // resaltar el link activo y useState para el menú hamburguesa en móvil).
-export default function AdminHeader({ userName, userRole }: AdminHeaderProps) {
+export default function AdminHeader({ userName, userEmail, userRole }: AdminHeaderProps) {
     return (
         <header
+            id="admin-header-bar"
             className="admin-header-bar"
             style={{
                 position: 'relative',
@@ -45,6 +47,7 @@ export default function AdminHeader({ userName, userRole }: AdminHeaderProps) {
 
             <AdminNav
                 userName={userName}
+                userEmail={userEmail}
                 userRole={userRole}
                 signOutAction={async () => {
                     'use server'

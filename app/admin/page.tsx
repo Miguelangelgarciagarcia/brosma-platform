@@ -85,7 +85,7 @@ export default async function AdminPage() {
 
     return (
         <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
-            <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
+            <AdminHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} />
 
             {/* Hero navy: saludo + CTA. El padding-bottom extra deja lugar
                 para que los stat cards (margin-top negativo, más abajo) se
