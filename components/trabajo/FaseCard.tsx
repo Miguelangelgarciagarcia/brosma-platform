@@ -56,28 +56,27 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
 
     return (
         <div
+            className="admin-content-card"
             style={{
-                background: 'var(--brand-panel-card)',
-                border: `1px solid ${retrasado ? '#ff6b6b' : destacado ? 'var(--brand-orange)' : 'var(--brand-panel-border)'}`,
+                border: `1px solid ${retrasado ? '#f3b3b2' : destacado ? 'var(--brand-orange)' : 'var(--admin-card-border)'}`,
                 borderLeft: `3px solid ${
                     retrasado
-                        ? '#ff6b6b'
+                        ? 'var(--admin-icon-red-fg)'
                         : fase.status === 'completado'
-                        ? '#ffffff'
+                        ? 'var(--admin-text-tertiary)'
                         : fase.status === 'en_proceso'
                         ? 'var(--brand-orange)'
-                        : 'var(--brand-panel-border)'
+                        : 'var(--admin-card-border)'
                 }`,
-                borderRadius: '10px',
                 padding: '14px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                animation: retrasado ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
+                animation: retrasado ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
             }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                <div style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>
+                <div style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--admin-text-tertiary)' }}>
                     {fase.project.folio} · {fase.project.title}
                 </div>
                 {(trabajando || retrasado) && (
@@ -91,8 +90,8 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                                     fontFamily: 'var(--font-body)',
                                     fontSize: '10px',
                                     fontWeight: 700,
-                                    color: '#ff6b6b',
-                                    background: 'rgba(255,107,107,0.14)',
+                                    color: 'var(--admin-icon-red-fg)',
+                                    background: 'var(--admin-icon-red-bg)',
                                     borderRadius: '999px',
                                     padding: '2px 8px',
                                 }}
@@ -102,7 +101,7 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                                         width: '6px',
                                         height: '6px',
                                         borderRadius: '50%',
-                                        background: '#ff3b3b',
+                                        background: 'var(--admin-icon-red-fg)',
                                         flexShrink: 0,
                                         animation: 'brandBlinkDot 1s ease-in-out infinite',
                                     }}
@@ -117,7 +116,7 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                                     fontSize: '10px',
                                     fontWeight: 700,
                                     color: 'var(--brand-orange)',
-                                    background: 'rgba(244,123,48,0.15)',
+                                    background: 'var(--admin-icon-orange-bg)',
                                     borderRadius: '999px',
                                     padding: '2px 8px',
                                 }}
@@ -129,22 +128,22 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                 )}
             </div>
 
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                 {fase.parent ? `${fase.parent.title} → ` : ''}
                 {fase.title}
             </div>
 
             {fase.description && (
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>{fase.description}</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-secondary)' }}>{fase.description}</div>
             )}
 
-            {rango && <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>{rango}</div>}
+            {rango && <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>{rango}</div>}
 
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>
                 Cliente: {fase.project.clientName}
             </div>
 
-            {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '12px', margin: 0 }}>{error}</p>}
+            {error && <p style={{ fontFamily: 'var(--font-body)', color: 'var(--admin-icon-red-fg)', fontSize: '12px', margin: 0 }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                 {fase.status === 'pendiente' && (
@@ -156,10 +155,10 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                             fontFamily: 'var(--font-body)',
                             fontSize: '12px',
                             padding: '8px 14px',
-                            borderRadius: '6px',
-                            border: '1px solid var(--brand-panel-border)',
-                            background: 'var(--brand-panel-input)',
-                            color: 'var(--brand-panel-fg)',
+                            borderRadius: '8px',
+                            border: '1px solid var(--admin-card-border)',
+                            background: '#ffffff',
+                            color: 'var(--admin-text-primary)',
                             cursor: 'pointer',
                         }}
                     >
@@ -179,7 +178,7 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                             fontFamily: 'var(--font-body)',
                             fontSize: '12px',
                             padding: '8px 14px',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             border: 'none',
                             background: 'var(--brand-orange)',
                             color: '#fff',
@@ -192,7 +191,9 @@ export default function FaseCard({ fase, destacado, trabajando, retrasado }: Pro
                     </button>
                 )}
                 {fase.status === 'completado' && (
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: '#ffffff' }}>✓ Terminado</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-success-fg)', fontWeight: 700 }}>
+                        ✓ Terminado
+                    </span>
                 )}
             </div>
         </div>

@@ -10,9 +10,8 @@ type GrupoACargo = { folio: string; title: string; clientName: string; puntos: P
 
 function estatusBadge(status: string) {
     return {
-        background:
-            status === 'completado' ? 'rgba(255,255,255,0.14)' : status === 'en_proceso' ? 'rgba(244,123,48,0.18)' : 'rgba(255,255,255,0.06)',
-        color: status === 'completado' ? '#ffffff' : status === 'en_proceso' ? 'var(--brand-orange)' : 'var(--brand-panel-fg3)',
+        background: status === 'completado' ? '#e4e7eb' : status === 'en_proceso' ? 'var(--admin-icon-orange-bg)' : '#eef1f4',
+        color: status === 'completado' ? 'var(--admin-text-primary)' : status === 'en_proceso' ? 'var(--brand-orange)' : 'var(--admin-text-tertiary)',
         label: status === 'completado' ? 'Completado' : status === 'en_proceso' ? 'En proceso' : 'Pendiente',
     }
 }
@@ -21,13 +20,11 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
     if (grupos.length === 0) {
         return (
             <div
+                className="admin-content-card"
                 style={{
-                    background: 'var(--brand-panel-card)',
-                    border: '1px solid var(--brand-panel-border)',
-                    borderRadius: '10px',
                     padding: '24px',
                     textAlign: 'center',
-                    color: 'var(--brand-panel-fg3)',
+                    color: 'var(--admin-text-tertiary)',
                     fontFamily: 'var(--font-body)',
                     fontSize: '13px',
                 }}
@@ -42,10 +39,8 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
             {grupos.map((grupo) => (
                 <div
                     key={grupo.folio}
+                    className="admin-content-card"
                     style={{
-                        background: 'var(--brand-panel-card)',
-                        border: '1px solid var(--brand-panel-border)',
-                        borderRadius: '10px',
                         padding: '14px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -54,10 +49,10 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                 >
                     <div>
                         <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--brand-orange)' }}>{grupo.folio}</div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                             {grupo.title}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>{grupo.clientName}</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>{grupo.clientName}</div>
                     </div>
 
                     {grupo.puntos.map((punto) => {
@@ -65,19 +60,18 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                         return (
                             <div
                                 key={punto.id}
+                                className="admin-subpanel"
                                 style={{
-                                    border: '1px solid var(--brand-panel-border)',
                                     borderLeft: '3px solid var(--brand-orange)',
-                                    borderRadius: '8px',
                                     padding: '10px 12px',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: '8px',
-                                    animation: punto.atrasado ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
+                                    animation: punto.atrasado ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
                                 }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                                         {punto.label}. {punto.title}
                                     </span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
@@ -90,8 +84,8 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                                                     fontFamily: 'var(--font-body)',
                                                     fontSize: '10px',
                                                     fontWeight: 700,
-                                                    color: '#ff6b6b',
-                                                    background: 'rgba(255,107,107,0.14)',
+                                                    color: 'var(--admin-icon-red-fg)',
+                                                    background: 'var(--admin-icon-red-bg)',
                                                     borderRadius: '999px',
                                                     padding: '2px 8px',
                                                 }}
@@ -101,7 +95,7 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                                                         width: '6px',
                                                         height: '6px',
                                                         borderRadius: '50%',
-                                                        background: '#ff3b3b',
+                                                        background: 'var(--admin-icon-red-fg)',
                                                         flexShrink: 0,
                                                         animation: 'brandBlinkDot 1s ease-in-out infinite',
                                                     }}
@@ -126,7 +120,7 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                                 </div>
 
                                 {punto.subpuntos.length === 0 ? (
-                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                                         Todavía no tiene subpuntos.
                                     </p>
                                 ) : (
@@ -143,22 +137,22 @@ export default function AmiCargoList({ grupos }: { grupos: GrupoACargo[] }) {
                                                         gap: '8px',
                                                         padding: '6px 8px',
                                                         borderRadius: '6px',
-                                                        border: sp.atrasado ? '1px solid #ff6b6b' : '1px solid transparent',
-                                                        background: 'rgba(255,255,255,0.03)',
-                                                        animation: sp.atrasado ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
+                                                        border: sp.atrasado ? '1px solid #f3b3b2' : '1px solid transparent',
+                                                        background: '#ffffff',
+                                                        animation: sp.atrasado ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
                                                     }}
                                                 >
                                                     <span
                                                         style={{
                                                             fontFamily: 'var(--font-body)',
                                                             fontSize: '12px',
-                                                            color: 'var(--brand-panel-fg2)',
+                                                            color: 'var(--admin-text-secondary)',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
                                                             whiteSpace: 'nowrap',
                                                         }}
                                                     >
-                                                        {sp.label} {sp.title} · <span style={{ color: 'var(--brand-panel-fg3)' }}>{sp.responsableName}</span>
+                                                        {sp.label} {sp.title} · <span style={{ color: 'var(--admin-text-tertiary)' }}>{sp.responsableName}</span>
                                                     </span>
                                                     <span
                                                         style={{

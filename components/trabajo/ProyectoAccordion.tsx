@@ -46,10 +46,9 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                 return (
                     <div
                         key={grupo.folio}
+                        className="admin-content-card"
                         style={{
-                            background: 'var(--brand-panel-card)',
-                            border: `1px solid ${hayRetrasados ? '#ff6b6b' : 'var(--brand-panel-border)'}`,
-                            borderRadius: '10px',
+                            border: `1px solid ${hayRetrasados ? '#f3b3b2' : 'var(--admin-card-border)'}`,
                             overflow: 'hidden',
                         }}
                     >
@@ -78,7 +77,7 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                                         fontFamily: 'var(--font-body)',
                                         fontSize: '14px',
                                         fontWeight: 700,
-                                        color: 'var(--brand-panel-fg)',
+                                        color: 'var(--admin-text-primary)',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap',
@@ -86,7 +85,7 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                                 >
                                     {grupo.title}
                                 </div>
-                                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
+                                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>
                                     {grupo.clientName}
                                 </div>
                             </div>
@@ -97,8 +96,8 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                                             fontFamily: 'var(--font-body)',
                                             fontSize: '10px',
                                             fontWeight: 700,
-                                            color: '#ff6b6b',
-                                            background: 'rgba(255,107,107,0.14)',
+                                            color: 'var(--admin-icon-red-fg)',
+                                            background: 'var(--admin-icon-red-bg)',
                                             borderRadius: '999px',
                                             padding: '2px 8px',
                                         }}
@@ -106,10 +105,10 @@ export default function ProyectoAccordion({ grupos }: { grupos: Grupo[] }) {
                                         ⚠ Retrasado
                                     </span>
                                 )}
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>
                                     {grupo.fases.length} punto{grupo.fases.length === 1 ? '' : 's'}
                                 </span>
-                                <span style={{ fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>{abierto ? '▼' : '▶'}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--admin-text-tertiary)' }}>{abierto ? '▼' : '▶'}</span>
                             </div>
                         </button>
 
