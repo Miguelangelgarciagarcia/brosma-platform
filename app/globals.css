@@ -261,6 +261,8 @@ select.brand-panel-input option {
   --admin-icon-navy-fg: var(--brand-navy);
   --admin-icon-red-bg: #fde3e3;
   --admin-icon-red-fg: #e0403f;
+  --admin-success-bg: #e6f6ee;
+  --admin-success-fg: #157a4a;
 }
 
 .admin-stat-card {
@@ -338,22 +340,94 @@ a.admin-history-row:hover {
   box-shadow: 0 4px 14px rgba(16, 32, 46, 0.08);
 }
 
-/* Input de búsqueda del historial (tema claro, a juego con el resto del
-   dashboard rediseñado). */
+/* Input de texto en tema claro: lo usa el buscador de Historial
+   (.admin-search-input) y los formularios de Configuración (.admin-input,
+   mismo aspecto, nombre genérico porque ahí no son búsquedas). */
+.admin-input,
 .admin-search-input {
   border: 1px solid var(--admin-card-border);
   background: #ffffff;
   color: var(--admin-text-primary);
 }
 
+.admin-input::placeholder,
 .admin-search-input::placeholder {
   color: var(--admin-text-tertiary);
 }
 
+.admin-input:focus,
 .admin-search-input:focus {
   outline: none;
   border-color: var(--brand-orange);
   box-shadow: 0 0 0 3px rgba(244, 123, 48, 0.12);
+}
+
+/* Autocompletado del navegador (usuario/contraseña guardados): Chrome
+   pinta su propio color de texto casi ilegible sobre fondo blanco si no
+   se fuerza explícitamente. Delay de transición larguísimo es el truco
+   estándar para bloquear también el fondo amarillo de autofill. */
+.admin-input:-webkit-autofill,
+.admin-input:-webkit-autofill:hover,
+.admin-input:-webkit-autofill:focus,
+.admin-search-input:-webkit-autofill,
+.admin-search-input:-webkit-autofill:hover,
+.admin-search-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--admin-text-primary);
+  caret-color: var(--admin-text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* "Subpanel" dentro de una tarjeta de módulo (Configuración): el módulo ya
+   es blanco (.admin-content-card), así que sus piezas internas (form de
+   alta, filas de cuentas/puntos) usan un tono gris muy sutil para que se
+   distingan del fondo blanco del módulo sin competir con él. */
+.admin-subpanel {
+  background: var(--admin-content-bg);
+  border: 1px solid var(--admin-card-border);
+  border-radius: 12px;
+}
+
+/* Botones chicos (subir/bajar/activar) de Configuración, en tema claro. */
+.admin-light-btn {
+  background: #ffffff;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-light-btn:hover:not(:disabled) {
+  background: var(--admin-content-bg);
+  border-color: rgba(244, 123, 48, 0.4);
+}
+
+.admin-light-btn:disabled {
+  cursor: not-allowed;
+}
+
+/* Botón de "ojo" para mostrar/ocultar la contraseña temporal, superpuesto
+   dentro del input (Configuración > Usuarios). */
+.admin-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.admin-password-toggle:hover {
+  color: var(--admin-text-primary);
+  background: var(--admin-content-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {
