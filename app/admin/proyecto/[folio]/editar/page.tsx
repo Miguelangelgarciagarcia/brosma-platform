@@ -94,5 +94,14 @@ export default async function EditarProyectoPage({
         mainPoints,
     }
 
-    return <ProyectoForm mode="editar" folio={folio} initial={initial} />
+    return (
+        <ProyectoForm
+            mode="editar"
+            folio={folio}
+            initial={initial}
+            userName={session.user?.name}
+            userEmail={session.user?.email}
+            userRole={session.user?.role}
+        />
+    )
 }

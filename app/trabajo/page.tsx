@@ -1,7 +1,8 @@
-import { auth, signOut } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
+import { signOutAction } from '@/lib/actions'
+import WorkerHeader from '@/components/trabajo/WorkerHeader'
 import CarruselHoy from '@/components/trabajo/CarruselHoy'
 import PendientesFinalizadosTabs from '@/components/trabajo/PendientesFinalizadosTabs'
 import { hoyUTC, estaAtrasada } from '@/lib/dates'
@@ -216,87 +217,44 @@ export default async function TrabajoPage() {
     const completadosPorProyecto = agruparPorProyecto(completados)
 
     return (
-        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
-            <div
-                style={{
-                    background: 'var(--brand-navy-deep)',
-                    borderBottom: '1px solid var(--brand-panel-border)',
-                    padding: '14px 20px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                        GRUPO BROSMA
-                    </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
-                    <span
-                        style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: '12px',
-                            color: 'var(--brand-panel-fg2)',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            maxWidth: '140px',
-                        }}
-                    >
-                        {session.user?.name}
-                    </span>
-                    <Link href="/cuenta" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
-                        Mi cuenta
-                    </Link>
-                    <form
-                        action={async () => {
-                            'use server'
-                            await signOut({ redirectTo: '/login' })
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            style={{
-                                fontFamily: 'var(--font-body)',
-                                fontSize: '12px',
-                                color: 'var(--brand-panel-fg2)',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Salir
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
+            <WorkerHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} signOutAction={signOutAction} />
 
-            <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                <div>
-                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', color: '#ffffff', margin: '0 0 4px' }}>
+            {/* Hero navy: mismo patrón que el panel Admin (dashboard, historial,
+                configuración...), para que Trabajo tenga la misma línea gráfica
+                y se sienta parte de la misma plataforma. */}
+            <section style={{ background: 'var(--admin-topbar-bg)', padding: '28px 20px 64px' }}>
+                <div className="admin-fade-up admin-fade-delay-1" style={{ maxWidth: '860px', margin: '0 auto' }}>
+                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(22px, 4vw, 28px)', color: '#ffffff', margin: '0 0 4px' }}>
                         ¡Bienvenido, {session.user?.name?.split(' ')[0]}!
                     </h1>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-topbar-fg2)', margin: 0 }}>
                         Esto es lo que tienes en puerta hoy.
                     </p>
                 </div>
+            </section>
 
-                <div>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '10px' }}>
+            <div
+                style={{
+                    maxWidth: '860px',
+                    margin: '-32px auto 0',
+                    padding: '0 20px 40px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                }}
+            >
+                <section className="admin-content-card admin-fade-up admin-fade-delay-1" style={{ padding: '20px 22px' }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--admin-text-secondary)', margin: '0 0 12px' }}>
                         Corriendo hoy ({carrusel.length})
                     </h2>
                     {carrusel.length === 0 ? (
                         <div
+                            className="admin-subpanel"
                             style={{
-                                background: 'var(--brand-panel-card)',
-                                border: '1px solid var(--brand-panel-border)',
-                                borderRadius: '10px',
                                 padding: '20px',
                                 textAlign: 'center',
-                                color: 'var(--brand-panel-fg3)',
+                                color: 'var(--admin-text-tertiary)',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '13px',
                             }}
@@ -306,16 +264,18 @@ export default async function TrabajoPage() {
                     ) : (
                         <CarruselHoy fases={carrusel} />
                     )}
-                </div>
+                </section>
 
-                <PendientesFinalizadosTabs
-                    pendientes={pendientesPorProyecto}
-                    completados={completadosPorProyecto}
-                    totalPendientes={pendientes.length}
-                    totalCompletados={completados.length}
-                    aCargo={encargosPorProyecto}
-                    totalACargo={totalEncargos}
-                />
+                <div className="admin-fade-up admin-fade-delay-2">
+                    <PendientesFinalizadosTabs
+                        pendientes={pendientesPorProyecto}
+                        completados={completadosPorProyecto}
+                        totalPendientes={pendientes.length}
+                        totalCompletados={completados.length}
+                        aCargo={encargosPorProyecto}
+                        totalACargo={totalEncargos}
+                    />
+                </div>
             </div>
         </main>
     )

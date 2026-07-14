@@ -46,11 +46,11 @@ function estatusBadge(status: string) {
     return {
         background:
             status === 'completado'
-                ? 'rgba(255,255,255,0.14)'
+                ? 'var(--admin-success-bg)'
                 : status === 'en_proceso'
-                ? 'rgba(244,123,48,0.18)'
-                : 'rgba(255,255,255,0.06)',
-        color: status === 'completado' ? '#ffffff' : status === 'en_proceso' ? 'var(--brand-orange)' : 'var(--brand-panel-fg3)',
+                ? 'var(--admin-icon-orange-bg)'
+                : '#eef1f4',
+        color: status === 'completado' ? 'var(--admin-success-fg)' : status === 'en_proceso' ? 'var(--brand-orange)' : 'var(--admin-text-tertiary)',
     }
 }
 
@@ -70,13 +70,14 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
     return (
         <div style={{ marginLeft: node.depth > 0 ? '16px' : 0, marginTop: '8px' }}>
             <div
+                className={node.depth === 0 ? 'admin-content-card' : undefined}
                 style={{
-                    border: '1px solid var(--brand-panel-border)',
-                    borderLeft: node.depth === 0 ? '3px solid var(--brand-orange)' : '2px solid var(--brand-panel-border)',
-                    borderRadius: '6px',
+                    border: node.depth === 0 ? undefined : '1px solid var(--admin-card-border)',
+                    borderLeft: node.depth === 0 ? '3px solid var(--brand-orange)' : '2px solid var(--admin-card-border)',
+                    borderRadius: node.depth === 0 ? undefined : '8px',
                     padding: '10px 12px',
-                    background: node.depth === 0 ? 'var(--brand-panel-card)' : 'transparent',
-                    animation: parpadea ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
+                    background: node.depth === 0 ? undefined : 'var(--admin-content-bg)',
+                    animation: parpadea ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
@@ -95,7 +96,7 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
                             minWidth: 0,
                         }}
                     >
-                        <span style={{ fontSize: '10px', color: 'var(--brand-panel-fg3)', flexShrink: 0 }}>
+                        <span style={{ fontSize: '10px', color: 'var(--admin-text-tertiary)', flexShrink: 0 }}>
                             {colapsado ? '▶' : '▼'}
                         </span>
                         <span
@@ -103,16 +104,16 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
                                 fontFamily: 'var(--font-body)',
                                 fontSize: node.depth === 0 ? '13px' : '12px',
                                 fontWeight: node.depth === 0 ? 700 : 400,
-                                color: 'var(--brand-panel-fg)',
+                                color: 'var(--admin-text-primary)',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {label}. {node.title || <em style={{ color: 'var(--brand-panel-fg3)' }}>sin título</em>}
+                            {label}. {node.title || <em style={{ color: 'var(--admin-text-tertiary)' }}>sin título</em>}
                         </span>
                         {colapsado && (
-                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', flexShrink: 0 }}>
+                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', flexShrink: 0 }}>
                                 · {node.responsible?.name}
                             </span>
                         )}
@@ -127,8 +128,8 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
                                     fontFamily: 'var(--font-body)',
                                     fontSize: '10px',
                                     fontWeight: 700,
-                                    color: '#ff6b6b',
-                                    background: 'rgba(255,107,107,0.14)',
+                                    color: 'var(--admin-icon-red-fg)',
+                                    background: 'var(--admin-icon-red-bg)',
                                     borderRadius: '999px',
                                     padding: '2px 8px',
                                 }}
@@ -138,7 +139,7 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
                                         width: '6px',
                                         height: '6px',
                                         borderRadius: '50%',
-                                        background: '#ff3b3b',
+                                        background: 'var(--admin-icon-red-fg)',
                                         flexShrink: 0,
                                         animation: 'brandBlinkDot 1s ease-in-out infinite',
                                     }}
@@ -163,18 +164,18 @@ function PhaseNode({ node, label, proyecto }: { node: PhaseNodeData; label: stri
 
                 {!colapsado && (
                     <>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', marginTop: '4px' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', marginTop: '4px' }}>
                             {node.depth === 0 && !esPuntoSoloEstatus(node.mainPointKey ?? '') ? 'Encargado' : 'Responsable'}:{' '}
                             {node.responsible?.name}
                             {node.estimatedDays != null && ` · ${node.estimatedDays} días estimados`}
                         </div>
                         {(node.startDate || node.endDate) && (
-                            <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', marginTop: '2px' }}>
+                            <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', marginTop: '2px' }}>
                                 Inicio: {formatDate(node.startDate)} · Término: {formatDate(node.endDate)}
                             </div>
                         )}
                         {node.description && (
-                            <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)', marginTop: '6px' }}>
+                            <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-secondary)', marginTop: '6px' }}>
                                 {node.description}
                             </div>
                         )}

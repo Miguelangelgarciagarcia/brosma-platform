@@ -50,75 +50,41 @@ export default function PendientesFinalizadosTabs({
 
     const grupos = tab === 'pendientes' ? pendientes : tab === 'finalizados' ? completados : null
 
+    function pillStyle(active: boolean): React.CSSProperties {
+        return {
+            flex: 1,
+            minWidth: '90px',
+            fontFamily: 'var(--font-body)',
+            fontSize: '13px',
+            fontWeight: 700,
+            padding: '8px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            background: active ? 'var(--brand-orange)' : 'none',
+            color: active ? '#fff' : 'var(--admin-text-secondary)',
+        }
+    }
+
     return (
         <div>
             <div
+                className="admin-subpanel"
                 style={{
                     display: 'flex',
                     gap: '4px',
-                    background: 'var(--brand-panel-input)',
-                    border: '1px solid var(--brand-panel-border)',
-                    borderRadius: '10px',
                     padding: '4px',
                     marginBottom: '14px',
                     flexWrap: 'wrap',
                 }}
             >
-                <button
-                    type="button"
-                    onClick={() => setTab('pendientes')}
-                    style={{
-                        flex: 1,
-                        minWidth: '90px',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        padding: '8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: tab === 'pendientes' ? 'var(--brand-orange)' : 'none',
-                        color: tab === 'pendientes' ? '#fff' : 'var(--brand-panel-fg2)',
-                    }}
-                >
+                <button type="button" onClick={() => setTab('pendientes')} style={pillStyle(tab === 'pendientes')}>
                     Pendientes ({totalPendientes})
                 </button>
-                <button
-                    type="button"
-                    onClick={() => setTab('finalizados')}
-                    style={{
-                        flex: 1,
-                        minWidth: '90px',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        padding: '8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: tab === 'finalizados' ? 'var(--brand-orange)' : 'none',
-                        color: tab === 'finalizados' ? '#fff' : 'var(--brand-panel-fg2)',
-                    }}
-                >
+                <button type="button" onClick={() => setTab('finalizados')} style={pillStyle(tab === 'finalizados')}>
                     Finalizados ({totalCompletados})
                 </button>
-                <button
-                    type="button"
-                    onClick={() => setTab('a_cargo')}
-                    style={{
-                        flex: 1,
-                        minWidth: '90px',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        padding: '8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: tab === 'a_cargo' ? 'var(--brand-orange)' : 'none',
-                        color: tab === 'a_cargo' ? '#fff' : 'var(--brand-panel-fg2)',
-                    }}
-                >
+                <button type="button" onClick={() => setTab('a_cargo')} style={pillStyle(tab === 'a_cargo')}>
                     A mi cargo ({totalACargo})
                 </button>
             </div>
@@ -127,13 +93,11 @@ export default function PendientesFinalizadosTabs({
                 <AmiCargoList grupos={aCargo} />
             ) : grupos && grupos.length === 0 ? (
                 <div
+                    className="admin-content-card"
                     style={{
-                        background: 'var(--brand-panel-card)',
-                        border: '1px solid var(--brand-panel-border)',
-                        borderRadius: '10px',
                         padding: '24px',
                         textAlign: 'center',
-                        color: 'var(--brand-panel-fg3)',
+                        color: 'var(--admin-text-tertiary)',
                         fontFamily: 'var(--font-body)',
                         fontSize: '13px',
                     }}

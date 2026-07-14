@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import SignatureCanvas from 'react-signature-canvas'
 
 type Props = {
@@ -76,20 +77,21 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>{label}</label>
+            <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--admin-text-secondary)' }}>{label}</label>
 
             <div
                 onClick={abrirModal}
+                className={firmada ? undefined : 'admin-subpanel'}
                 style={{
-                    border: firmada ? '1px solid var(--brand-orange)' : '1px dashed var(--brand-panel-border)',
+                    border: firmada ? '1px solid var(--brand-orange)' : '1px dashed var(--admin-card-border)',
                     borderRadius: '10px',
                     height: '80px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    background: firmada ? 'rgba(244,123,48,0.08)' : 'var(--brand-panel-input)',
-                    color: firmada ? 'var(--brand-orange)' : 'var(--brand-panel-fg3)',
+                    background: firmada ? 'var(--admin-icon-orange-bg)' : undefined,
+                    color: firmada ? 'var(--brand-orange)' : 'var(--admin-text-tertiary)',
                     fontFamily: 'var(--font-body)',
                     fontSize: '13px',
                     gap: '8px',
@@ -105,7 +107,7 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                     style={{
                         fontFamily: 'var(--font-body)',
                         fontSize: '11px',
-                        color: '#ff6b6b',
+                        color: 'var(--admin-icon-red-fg)',
                         background: 'none',
                         border: 'none',
                         alignSelf: 'flex-end',
@@ -120,12 +122,18 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                 <SignatureCanvas ref={firmaRef} canvasProps={{ width: 600, height: 150 }} backgroundColor="white" />
             </div>
 
-            {modalAbierto && (
+            {/* Modal a pantalla completa vía portal a <body>: igual que
+                AccountModal y el panel móvil del nav, un position:fixed
+                anidado dentro de una tarjeta con animación de entrada puede
+                quedar atrapado por la capa de composición de esa tarjeta y
+                pintarse encapsulado dentro de ella en vez de cubrir toda la
+                pantalla. El portal evita el problema de raíz. */}
+            {modalAbierto && createPortal(
                 <div
                     style={{
                         position: 'fixed',
                         inset: 0,
-                        zIndex: 50,
+                        zIndex: 9999,
                         background: 'rgba(0,0,0,0.7)',
                         display: 'flex',
                         alignItems: 'center',
@@ -184,7 +192,8 @@ export default function FirmaModal({ label, firmaRef, initialDataUrl }: Props) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
         </div>
     )

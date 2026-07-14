@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import AdminHeader from '@/components/admin/AdminHeader'
 import SignatureCanvas from 'react-signature-canvas'
 import FirmaModal from '@/components/FirmaModal'
 import ConfirmarCorreoModal from '@/components/admin/ConfirmarCorreoModal'
@@ -47,29 +48,23 @@ function validarSubpuntosCompletos(nodes: SubpointNode[], pathLabel: string): st
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--brand-panel-input)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '6px',
+    borderRadius: '10px',
     padding: '10px 12px',
-    color: 'var(--brand-panel-fg)',
     fontFamily: 'var(--font-body)',
     fontSize: '13px',
-    transition: 'border-color 0.15s ease, background 0.15s ease',
 }
 
 const labelStyle: React.CSSProperties = {
     fontFamily: 'var(--font-body)',
     fontSize: '11px',
-    color: 'var(--brand-panel-fg2)',
+    fontWeight: 600,
+    color: 'var(--admin-text-secondary)',
     display: 'block',
     marginBottom: '4px',
 }
 
 const sectionStyle: React.CSSProperties = {
-    background: 'var(--brand-panel-card)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '10px',
-    padding: '18px',
+    padding: '22px',
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
@@ -123,9 +118,14 @@ export type ProyectoRegistradoFormInitialData = {
 type Props = {
     folio: string
     initial: ProyectoRegistradoFormInitialData
+    // Para el header compartido del panel (mismo <AdminHeader/> que
+    // Dashboard/Historial/Configuración/Registrar).
+    userName?: string | null
+    userEmail?: string | null
+    userRole?: string | null
 }
 
-export default function ProyectoRegistradoForm({ folio, initial }: Props) {
+export default function ProyectoRegistradoForm({ folio, initial, userName, userEmail, userRole }: Props) {
     const router = useRouter()
     const clienteSigRef = useRef<SignatureCanvas>(null)
     const receptorSigRef = useRef<SignatureCanvas>(null)
@@ -316,7 +316,16 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                 mainPoints: mainPoints.map((mp) => ({
                     mainPointKey: mp.mainPointKey,
                     title: mp.label,
-                    responsibleId: mp.responsibleId || trabajadores[0]?.id || '',
+                    // Nunca inventar un encargado: si el usuario no eligió
+                    // uno, se manda vacío. Antes esto caía en
+                    // trabajadores[0]?.id (el primero de la lista, al azar
+                    // desde la perspectiva del usuario) — asignaba trabajo a
+                    // alguien que nadie eligió. La validación de arriba ya
+                    // bloquea guardar sin responsable en los puntos con
+                    // trabajo real; para "solo estatus" el servidor aplica
+                    // su propio respaldo documentado (el id del Admin que
+                    // guarda), no un trabajador cualquiera.
+                    responsibleId: mp.responsibleId,
                     estimatedDays: esPuntoSoloEstatus(mp.mainPointKey) ? 0 : diasCalculados(mp.children),
                     children: mp.children.length ? limpiarSubpuntosParaEnvio(mp.children) : undefined,
                 })),
@@ -364,62 +373,86 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
     }
 
     return (
-        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
+        <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
+            <AdminHeader userName={userName} userEmail={userEmail} userRole={userRole} />
+
+            {/* Hero navy: mismo patrón que dashboard/historial/configuración/
+                registrar, para que editar un proyecto registrado se sienta
+                parte de la misma pantalla en vez de un salto a otro diseño. */}
+            <section style={{ background: 'var(--admin-topbar-bg)', padding: '28px 20px 64px' }}>
+                <div className="admin-fade-up" style={{ maxWidth: '1180px', margin: '0 auto' }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-topbar-fg2)', margin: '0 0 4px' }}>
+                        Editar proyecto registrado
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+                        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px, 4vw, 32px)', color: '#ffffff', margin: 0 }}>
+                            Editar proyecto {folio}
+                        </h1>
+                        <Link
+                            href={`/admin/proyecto/${folio}`}
+                            className="admin-fade-up admin-fade-delay-1"
+                            style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'var(--brand-orange)', textDecoration: 'none' }}
+                        >
+                            ← Volver al proyecto
+                        </Link>
+                    </div>
+
+                    <p
+                        className="admin-fade-up admin-fade-delay-1"
+                        style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            color: 'var(--admin-warning-fg)',
+                            background: 'var(--admin-warning-bg)',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                            margin: '14px 0 0',
+                            display: 'inline-block',
+                        }}
+                    >
+                        Este proyecto ya está registrado. Si cambias la fecha de entrega o los datos de pago, te
+                        preguntaremos si quieres avisarle al cliente antes de guardar.
+                    </p>
+                </div>
+            </section>
+
             <div
                 style={{
-                    background: 'var(--brand-navy-deep)',
-                    borderBottom: '1px solid var(--brand-panel-border)',
-                    padding: '14px 20px',
+                    maxWidth: '1180px',
+                    margin: '-32px auto 0',
+                    padding: '0 20px 40px',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    flexDirection: 'column',
+                    gap: '20px',
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                        GRUPO BROSMA
-                    </div>
-                </div>
-                <Link
-                    href={`/admin/proyecto/${folio}`}
-                    style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}
-                >
-                    ← Volver
-                </Link>
-            </div>
-
-            <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#ffffff', margin: 0 }}>
-                    Editar proyecto {folio}
-                </h1>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
-                    Este proyecto ya está registrado. Si cambias la fecha de entrega o los datos de pago, te
-                    preguntaremos si quieres avisarle al cliente antes de guardar.
-                </p>
-
-                <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                {/* Datos generales / cliente / financieros a la misma altura en
+                    escritorio (grid, se estiran igual que la tarjeta más alta
+                    de la fila); en móvil el mismo truco de minmax(min(px,100%))
+                    los colapsa a una sola columna en cascada. */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '20px', alignItems: 'stretch' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-1" style={sectionStyle}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Datos generales
                     </h2>
                     <div>
                         <label style={labelStyle}>Descripción breve del proyecto *</label>
-                        <input name="title" value={form.title} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
+                        <input name="title" value={form.title} onChange={handleChange} className="admin-input" style={inputStyle} />
                     </div>
                 </section>
 
-                <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-2" style={sectionStyle}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Datos del cliente
                     </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                         <div>
                             <label style={labelStyle}>Nombre completo *</label>
-                            <input name="clientName" value={form.clientName} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
+                            <input name="clientName" value={form.clientName} onChange={handleChange} className="admin-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Empresa *</label>
-                            <input name="company" value={form.company} onChange={handleChange} className="brand-panel-input" style={inputStyle} />
+                            <input name="company" value={form.company} onChange={handleChange} className="admin-input" style={inputStyle} />
                         </div>
                         <div>
                             <label style={labelStyle}>Teléfono *</label>
@@ -428,7 +461,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 value={form.phone}
                                 onChange={handlePhoneChange}
                                 inputMode="numeric"
-                                className="brand-panel-input"
+                                className="admin-input"
                                 style={inputStyle}
                             />
                         </div>
@@ -439,11 +472,14 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 type="email"
                                 value={form.email}
                                 onChange={handleChange}
-                                className="brand-panel-input"
-                                style={{ ...inputStyle, border: `1px solid ${emailValido ? 'var(--brand-panel-border)' : '#ff6b6b'}` }}
+                                className="admin-input"
+                                style={{
+                                    ...inputStyle,
+                                    border: `1px solid ${emailValido ? 'var(--admin-card-border)' : 'var(--admin-icon-red-fg)'}`,
+                                }}
                             />
                             {!emailValido && (
-                                <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: '4px 0 0' }}>
+                                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--admin-icon-red-fg)', fontSize: '11px', margin: '4px 0 0' }}>
                                     Correo con formato inválido
                                 </p>
                             )}
@@ -451,8 +487,8 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                     </div>
                 </section>
 
-                <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-3" style={sectionStyle}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Datos financieros
                     </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
@@ -464,7 +500,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 value={form.cost}
                                 onChange={handleCostChange}
                                 placeholder="0.00"
-                                className="brand-panel-input"
+                                className="admin-input"
                                 style={inputStyle}
                             />
                         </div>
@@ -477,13 +513,13 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                 onChange={handleAdvanceChange}
                                 disabled={!costoValido}
                                 placeholder={costoValido ? '0.00' : 'Primero coloca el costo'}
-                                className="brand-panel-input"
+                                className="admin-input"
                                 style={{ ...inputStyle, opacity: costoValido ? 1 : 0.5, cursor: costoValido ? 'text' : 'not-allowed' }}
                             />
                         </div>
                         <div>
                             <label style={labelStyle}>Estatus de pago</label>
-                            <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', background: 'transparent' }}>
+                            <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', background: 'transparent', cursor: 'default' }}>
                                 <span
                                     style={{
                                         fontFamily: 'var(--font-body)',
@@ -493,16 +529,16 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                         borderRadius: '999px',
                                         background:
                                             paymentStatus === 'pagado'
-                                                ? 'rgba(2,39,58,0.35)'
+                                                ? 'var(--admin-success-bg)'
                                                 : paymentStatus === 'anticipo'
-                                                ? 'rgba(244,123,48,0.15)'
-                                                : 'rgba(255,255,255,0.06)',
+                                                ? 'var(--admin-icon-orange-bg)'
+                                                : '#eef1f4',
                                         color:
                                             paymentStatus === 'pagado'
-                                                ? '#ffffff'
+                                                ? 'var(--admin-success-fg)'
                                                 : paymentStatus === 'anticipo'
                                                 ? 'var(--brand-orange)'
-                                                : 'var(--brand-panel-fg3)',
+                                                : 'var(--admin-text-tertiary)',
                                     }}
                                 >
                                     {paymentStatus === 'pagado' ? 'Pagado' : paymentStatus === 'anticipo' ? 'Anticipo' : 'Pendiente'}
@@ -517,17 +553,18 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             value={form.notes}
                             onChange={handleChange}
                             rows={3}
-                            className="brand-panel-input"
+                            className="admin-input"
                             style={{ ...inputStyle, resize: 'vertical' as const }}
                         />
                     </div>
                 </section>
+                </div>
 
-                <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-4" style={sectionStyle}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Puntos principales y fases
                     </h2>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                         "Listo para Entrega" y "Entregado" se marcan desde el detalle del proyecto, no aquí.
                     </p>
 
@@ -540,9 +577,8 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             return (
                                 <div
                                     key={mp.mainPointKey}
+                                    className="admin-subpanel"
                                     style={{
-                                        border: '1px solid var(--brand-panel-border)',
-                                        borderRadius: '10px',
                                         padding: '12px',
                                         display: 'flex',
                                         flexDirection: 'column',
@@ -557,7 +593,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '8px',
-                                            color: 'var(--brand-panel-fg)',
+                                            color: 'var(--admin-text-primary)',
                                         }}
                                     >
                                         {index + 1}. {mp.label}
@@ -567,8 +603,8 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                     fontFamily: 'var(--font-body)',
                                                     fontSize: '10px',
                                                     fontWeight: 700,
-                                                    color: '#ffffff',
-                                                    background: 'rgba(255,255,255,0.14)',
+                                                    color: 'var(--admin-text-primary)',
+                                                    background: '#e4e7eb',
                                                     borderRadius: '999px',
                                                     padding: '2px 8px',
                                                 }}
@@ -583,7 +619,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                     fontSize: '10px',
                                                     fontWeight: 700,
                                                     color: 'var(--brand-orange)',
-                                                    background: 'rgba(244,123,48,0.15)',
+                                                    background: 'var(--admin-icon-orange-bg)',
                                                     borderRadius: '999px',
                                                     padding: '2px 8px',
                                                 }}
@@ -597,7 +633,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                             value={mp.responsibleId}
                                             disabled={mpBloqueado}
                                             onChange={(e) => updateMainPoint(index, { responsibleId: e.target.value })}
-                                            className="brand-panel-input"
+                                            className="admin-input"
                                             style={{ ...inputStyle, opacity: mpBloqueado ? 0.6 : 1 }}
                                             title="Supervisa este punto, pero no lo inicia ni lo termina: eso lo hace quien esté asignado a cada subpunto de abajo."
                                         >
@@ -615,11 +651,11 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 background: 'transparent',
-                                                color: 'var(--brand-panel-fg2)',
+                                                color: 'var(--admin-text-secondary)',
                                             }}
                                         >
                                             <span>Días estimados</span>
-                                            <strong style={{ color: 'var(--brand-panel-fg)' }}>{dias}</strong>
+                                            <strong style={{ color: 'var(--admin-text-primary)' }}>{dias}</strong>
                                         </div>
                                     </div>
 
@@ -643,7 +679,7 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             gap: '8px',
                             fontFamily: 'var(--font-body)',
                             fontSize: '12px',
-                            color: 'var(--brand-panel-fg2)',
+                            color: 'var(--admin-text-secondary)',
                         }}
                     >
                         <input
@@ -657,12 +693,12 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                     <div
                         style={{
                             background: 'rgba(244,123,48,0.08)',
-                            border: '1px solid var(--brand-panel-border)',
+                            border: '1px solid var(--admin-card-border)',
                             borderRadius: '6px',
                             padding: '10px 12px',
                         }}
                     >
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg)' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-primary)' }}>
                             Entrega sugerida: <strong>{fechaSugerida.toLocaleDateString('es-MX')}</strong>
                         </div>
                     </div>
@@ -674,26 +710,41 @@ export default function ProyectoRegistradoForm({ folio, initial }: Props) {
                             name="estimatedDeliveryManual"
                             value={form.estimatedDeliveryManual}
                             onChange={handleChange}
-                            className="brand-panel-input"
-                            style={{ ...inputStyle, colorScheme: 'dark' }}
+                            className="admin-input"
+                            style={inputStyle}
                         />
                     </div>
                 </section>
 
-                <section style={sectionStyle}>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg2)' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-5" style={sectionStyle}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Firmas
                     </h2>
                     <FirmaModal label="Firma del cliente" firmaRef={clienteSigRef} initialDataUrl={initial.clientSignature || undefined} />
                     <FirmaModal label="Firma de quien recibe" firmaRef={receptorSigRef} initialDataUrl={initial.receiverSignature || undefined} />
                 </section>
 
-                {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '13px', margin: 0 }}>{error}</p>}
+                {error && (
+                    <p
+                        style={{
+                            fontFamily: 'var(--font-body)',
+                            color: 'var(--admin-icon-red-fg)',
+                            background: 'var(--admin-icon-red-bg)',
+                            borderRadius: '8px',
+                            padding: '10px 12px',
+                            fontSize: '13px',
+                            margin: 0,
+                        }}
+                    >
+                        {error}
+                    </p>
+                )}
 
                 <button
                     type="button"
                     disabled={loading}
                     onClick={preparar}
+                    className="admin-fade-up admin-fade-delay-5"
                     style={{
                         background: 'var(--brand-orange)',
                         border: 'none',

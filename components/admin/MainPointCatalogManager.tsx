@@ -15,21 +15,17 @@ export type MainPointTemplateData = {
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--brand-panel-input)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     padding: '8px 10px',
-    color: 'var(--brand-panel-fg)',
     fontFamily: 'var(--font-body)',
     fontSize: '13px',
 }
 
 const btnStyle: React.CSSProperties = {
-    background: 'var(--brand-panel-card-hover)',
-    border: '1px solid var(--brand-panel-border)',
-    color: 'var(--brand-panel-fg)',
+    border: '1px solid var(--admin-card-border)',
+    color: 'var(--admin-text-primary)',
     fontFamily: 'var(--font-body)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     padding: '6px 10px',
     fontSize: '12px',
     fontWeight: 700,
@@ -103,29 +99,27 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-secondary)', margin: 0 }}>
                 Estos son los puntos que se ofrecen al crear un proyecto nuevo. Cambiar, agregar, reordenar o
-                desactivar un punto aquí <strong style={{ color: 'var(--brand-panel-fg2)' }}>no afecta proyectos ya existentes</strong> —
+                desactivar un punto aquí <strong style={{ color: 'var(--admin-text-primary)' }}>no afecta proyectos ya existentes</strong> —
                 solo aplica a los que se creen de ahora en adelante.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {configurables.map((p, i) => (
                     <div
                         key={p.id}
+                        className="admin-subpanel"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             flexWrap: 'wrap',
                             gap: '8px',
-                            background: 'var(--brand-panel-card)',
-                            border: '1px solid var(--brand-panel-border)',
-                            borderRadius: '10px',
                             padding: '10px 12px',
                             opacity: p.active ? 1 : 0.55,
                         }}
                     >
-                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', width: '18px', flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', width: '18px', flexShrink: 0 }}>
                             {i + 1}.
                         </span>
                         <input
@@ -135,7 +129,7 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                                 const v = e.target.value.trim()
                                 if (v && v !== p.label) actualizarPunto(p.id, { label: v })
                             }}
-                            className="brand-panel-input"
+                            className="admin-input"
                             style={{ ...inputStyle, flex: '1 1 140px' }}
                         />
                         {/* Botones agrupados: en pantallas angostas se van juntos a su
@@ -145,6 +139,7 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                                 type="button"
                                 disabled={cargando || i === 0}
                                 onClick={() => actualizarPunto(p.id, { move: 'up' })}
+                                className="admin-light-btn"
                                 style={{ ...btnStyle, opacity: i === 0 ? 0.4 : 1 }}
                                 title="Subir"
                             >
@@ -154,6 +149,7 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                                 type="button"
                                 disabled={cargando || i === configurables.length - 1}
                                 onClick={() => actualizarPunto(p.id, { move: 'down' })}
+                                className="admin-light-btn"
                                 style={{ ...btnStyle, opacity: i === configurables.length - 1 ? 0.4 : 1 }}
                                 title="Bajar"
                             >
@@ -163,6 +159,7 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                                 type="button"
                                 disabled={cargando}
                                 onClick={() => actualizarPunto(p.id, { active: !p.active })}
+                                className="admin-light-btn"
                                 style={{ ...btnStyle, whiteSpace: 'nowrap' }}
                             >
                                 {p.active ? 'Desactivar' : 'Reactivar'}
@@ -177,8 +174,8 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                     value={nuevoLabel}
                     onChange={(e) => setNuevoLabel(e.target.value)}
                     placeholder="Nombre del nuevo punto"
-                    className="brand-panel-input"
-                    style={{ ...inputStyle, flex: '1 1 180px' }}
+                    className="admin-input"
+                    style={{ ...inputStyle, flex: '1 1 180px', padding: '10px 12px', fontSize: '14px' }}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') agregarPunto()
                     }}
@@ -187,20 +184,47 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                     type="button"
                     disabled={cargando || !nuevoLabel.trim()}
                     onClick={agregarPunto}
-                    style={{ ...btnStyle, whiteSpace: 'nowrap', background: 'var(--brand-orange)', color: '#fff', border: 'none', flexShrink: 0 }}
+                    style={{
+                        whiteSpace: 'nowrap',
+                        background: 'var(--brand-orange)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        fontFamily: 'var(--font-body)',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        opacity: cargando || !nuevoLabel.trim() ? 0.6 : 1,
+                    }}
                 >
                     + Agregar punto
                 </button>
             </div>
 
-            {error && <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '12px', margin: 0 }}>{error}</p>}
+            {error && (
+                <p
+                    style={{
+                        fontFamily: 'var(--font-body)',
+                        color: 'var(--admin-icon-red-fg)',
+                        background: 'var(--admin-icon-red-bg)',
+                        borderRadius: '8px',
+                        padding: '8px 10px',
+                        fontSize: '12px',
+                        margin: 0,
+                    }}
+                >
+                    {error}
+                </p>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
                 <p
                     style={{
                         fontFamily: 'var(--font-body)',
                         fontSize: '10px',
-                        color: 'var(--brand-panel-fg3)',
+                        color: 'var(--admin-text-tertiary)',
                         margin: 0,
                         textTransform: 'uppercase',
                         letterSpacing: '0.04em',
@@ -211,15 +235,13 @@ export default function MainPointCatalogManager({ initial }: { initial: MainPoin
                 {fijos.map((p) => (
                     <div
                         key={p.id}
+                        className="admin-subpanel"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            background: 'var(--brand-panel-bg)',
-                            border: '1px solid var(--brand-panel-border)',
-                            borderRadius: '10px',
                             padding: '10px 12px',
-                            color: 'var(--brand-panel-fg3)',
+                            color: 'var(--admin-text-tertiary)',
                             fontFamily: 'var(--font-body)',
                         }}
                     >
