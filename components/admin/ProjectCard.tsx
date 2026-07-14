@@ -15,10 +15,23 @@ type ProjectCardProps = {
         progreso: number
         atrasado: boolean
     }
+    // Posición en la lista: solo para escalonar la animación de entrada
+    // (fade-up), nada de lógica de negocio. Opcional por si algún día se
+    // usa este card fuera de una lista.
+    index?: number
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
     const entrega = project.estimatedDeliveryManual ?? project.estimatedDeliveryAuto
+
+    // Animación de entrada (fade-up escalonado, tope en 6 filas para que la
+    // lista no tarde una eternidad en terminar de aparecer si hay muchos
+    // proyectos) + el parpadeo de atrasado si aplica. Van juntas porque el
+    // shorthand "animation" en style inline gana siempre sobre cualquier
+    // regla de la hoja de estilos — combinarlas aquí es la única forma de
+    // que ambas convivan.
+    const entrada = `brandFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) ${(0.6 + Math.min(index, 6) * 0.08).toFixed(2)}s both`
+    const animacion = project.atrasado ? `${entrada}, brandBlinkAtrasoLight 1.6s ease-in-out infinite` : entrada
 
     return (
         <Link
@@ -35,7 +48,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 color: 'var(--admin-text-primary)',
                 transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 borderColor: project.atrasado ? '#f3b3b2' : undefined,
-                animation: project.atrasado ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
+                animation: animacion,
             }}
         >
             <div style={{ minWidth: 0, flex: 1 }}>

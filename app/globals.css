@@ -94,6 +94,15 @@ body {
   }
 }
 
+@keyframes brandFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes brandGlowFloat {
   0%,
   100% {
@@ -259,6 +268,45 @@ select.brand-panel-input option {
   border: 1px solid var(--admin-card-border);
   border-radius: 16px;
   box-shadow: 0 1px 2px rgba(16, 32, 46, 0.04), 0 12px 24px -12px rgba(16, 32, 46, 0.12);
+  animation: brandFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.admin-stat-card:nth-child(1) {
+  animation-delay: 0.28s;
+}
+
+.admin-stat-card:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.admin-stat-card:nth-child(3) {
+  animation-delay: 0.52s;
+}
+
+/* Animación de entrada del dashboard: fade + leve deslizamiento hacia
+   arriba, escalonado (header primero, luego saludo/CTA, stat cards, y por
+   último la lista de proyectos fila por fila desde ProjectCard.tsx). Todo
+   se resuelve en CSS/inline porque estas piezas son server components, sin
+   JS del lado del cliente. Duraciones/retrasos generosos (más lento que un
+   fade-in típico) para que se sienta suave, no apresurado. */
+.admin-fade-up {
+  animation: brandFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.admin-fade-delay-1 {
+  animation-delay: 0.18s;
+}
+
+.admin-fade-delay-2 {
+  animation-delay: 0.36s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-header-bar,
+  .admin-stat-card,
+  .admin-fade-up {
+    animation: none;
+  }
 }
 
 .admin-content-card {
@@ -290,6 +338,7 @@ a.admin-project-row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  animation: brandFadeIn 0.6s ease both;
 }
 
 .admin-topbar-nav {

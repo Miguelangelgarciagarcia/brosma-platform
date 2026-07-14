@@ -107,7 +107,7 @@ export default async function AdminPage() {
                         gap: '16px',
                     }}
                 >
-                    <div>
+                    <div className="admin-fade-up">
                         <p
                             style={{
                                 fontFamily: 'var(--font-body)',
@@ -132,6 +132,7 @@ export default async function AdminPage() {
 
                     <Link
                         href="/admin/nuevo"
+                        className="admin-fade-up admin-fade-delay-1"
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -247,7 +248,10 @@ export default async function AdminPage() {
                 </div>
 
                 {/* Listado */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div
+                    className="admin-fade-up admin-fade-delay-2"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}
+                >
                     <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--admin-text-primary)' }}>
                         Proyectos en proceso
                     </h2>
@@ -255,7 +259,7 @@ export default async function AdminPage() {
 
                 {activos.length === 0 ? (
                     <div
-                        className="admin-content-card"
+                        className="admin-content-card admin-fade-up admin-fade-delay-2"
                         style={{
                             padding: '40px',
                             textAlign: 'center',
@@ -270,8 +274,8 @@ export default async function AdminPage() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {activosConEstado.map((project) => (
-                            <ProjectCard key={project.folio} project={project} />
+                        {activosConEstado.map((project, index) => (
+                            <ProjectCard key={project.folio} project={project} index={index} />
                         ))}
                     </div>
                 )}
