@@ -102,5 +102,13 @@ export default async function EditarProyectoRegistradoPage({
         mainPoints,
     }
 
-    return <ProyectoRegistradoForm folio={folio} initial={initial} />
+    return (
+        <ProyectoRegistradoForm
+            folio={folio}
+            initial={initial}
+            userName={session.user?.name}
+            userEmail={session.user?.email}
+            userRole={session.user?.role}
+        />
+    )
 }

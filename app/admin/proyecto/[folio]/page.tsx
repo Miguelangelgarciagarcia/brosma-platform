@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import AdminHeader from '@/components/admin/AdminHeader'
 import { formatDate } from '@/lib/dates'
 import { esPuntoSoloEstatus } from '@/lib/main-points'
 import PhaseTree from '@/components/admin/PhaseTree'
@@ -68,123 +69,123 @@ export default async function ProyectoDetallePage({
         fontSize: '12px',
         color: '#ffffff',
         background: 'var(--brand-orange)',
-        borderRadius: '6px',
-        padding: '8px 14px',
+        borderRadius: '8px',
+        padding: '10px 16px',
         textDecoration: 'none',
         whiteSpace: 'nowrap',
         fontWeight: 700,
     }
 
-    return (
-        <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
-            <div
-                style={{
-                    background: 'var(--brand-navy-deep)',
-                    borderBottom: '1px solid var(--brand-panel-border)',
-                    padding: '14px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '10px', height: '10px', background: 'var(--brand-orange)', transform: 'rotate(45deg)', flexShrink: 0 }} />
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', letterSpacing: '0.1em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                        GRUPO BROSMA
-                    </div>
-                </div>
-                <Link href="/admin" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-orange)', textDecoration: 'none' }}>
-                    ← Volver
-                </Link>
-            </div>
+    const actionOutlineStyle: React.CSSProperties = {
+        fontFamily: 'var(--font-body)',
+        fontSize: '12px',
+        color: '#ffffff',
+        border: '1px solid var(--admin-topbar-border)',
+        borderRadius: '8px',
+        padding: '10px 16px',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap',
+        fontWeight: 600,
+    }
 
-            <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
-                    <div>
-                        <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--brand-orange)' }}>{project.folio}</div>
-                        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#ffffff', margin: '4px 0' }}>
-                            {project.title}
-                        </h1>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg2)' }}>
-                            {project.clientName}
-                            {project.company ? ` · ${project.company}` : ''} · {project.phone}
-                            {project.email ? ` · ${project.email}` : ''}
+    return (
+        <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
+            <AdminHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} />
+
+            {/* Hero navy: mismo patrón que dashboard/historial/configuración/
+                registrar, para que el detalle de un proyecto se sienta parte
+                de la misma pantalla en vez de un diseño aparte. */}
+            <section style={{ background: 'var(--admin-topbar-bg)', padding: '28px 20px 64px' }}>
+                <div className="admin-fade-up" style={{ maxWidth: '1180px', margin: '0 auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 0 }}>
+                            <p style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--brand-orange)', margin: '0 0 4px' }}>
+                                {project.folio}
+                            </p>
+                            <h1
+                                style={{
+                                    fontFamily: 'var(--font-heading)',
+                                    fontSize: 'clamp(22px, 4vw, 30px)',
+                                    color: '#ffffff',
+                                    margin: 0,
+                                    wordBreak: 'break-word',
+                                }}
+                            >
+                                {project.title}
+                            </h1>
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-topbar-fg2)', margin: '6px 0 0' }}>
+                                {project.clientName}
+                                {project.company ? ` · ${project.company}` : ''} · {project.phone}
+                                {project.email ? ` · ${project.email}` : ''}
+                            </p>
+                        </div>
+
+                        <div className="admin-fade-up admin-fade-delay-1" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {project.recordStatus === 'borrador' && (
+                                <Link href={`/admin/proyecto/${project.folio}/editar`} style={actionLinkStyle}>
+                                    Editar
+                                </Link>
+                            )}
+                            {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
+                                <Link href={`/admin/proyecto/${project.folio}/editar-registrado`} style={actionLinkStyle}>
+                                    Editar
+                                </Link>
+                            )}
+                            {project.recordStatus === 'registrado' && (
+                                <a href={`/api/proyectos/${project.folio}/pdf`} target="_blank" rel="noopener noreferrer" style={actionOutlineStyle}>
+                                    Ver PDF
+                                </a>
+                            )}
+                            {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
+                                <a href={`/api/proyectos/${project.folio}/gantt`} style={actionOutlineStyle}>
+                                    Descargar diagrama Gantt
+                                </a>
+                            )}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {project.recordStatus === 'borrador' && (
-                            <Link href={`/admin/proyecto/${project.folio}/editar`} style={actionLinkStyle}>
-                                Editar
-                            </Link>
-                        )}
-                        {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
-                            <Link href={`/admin/proyecto/${project.folio}/editar-registrado`} style={actionLinkStyle}>
-                                Editar
-                            </Link>
-                        )}
-                        {project.recordStatus === 'registrado' && (
-                            <a
-                                href={`/api/proyectos/${project.folio}/pdf`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    color: 'var(--brand-panel-fg)',
-                                    border: '1px solid var(--brand-panel-border)',
-                                    borderRadius: '6px',
-                                    padding: '8px 14px',
-                                    textDecoration: 'none',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                Ver PDF
-                            </a>
-                        )}
-                        {project.recordStatus === 'registrado' && session.user?.role === 'admin' && (
-                            <a
-                                href={`/api/proyectos/${project.folio}/gantt`}
-                                style={{
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    color: 'var(--brand-panel-fg)',
-                                    border: '1px solid var(--brand-panel-border)',
-                                    borderRadius: '6px',
-                                    padding: '8px 14px',
-                                    textDecoration: 'none',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                Descargar diagrama Gantt
-                            </a>
-                        )}
-                    </div>
                 </div>
+            </section>
 
+            <div
+                style={{
+                    maxWidth: '1180px',
+                    margin: '-32px auto 0',
+                    padding: '0 20px 40px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                }}
+            >
                 <div
+                    className="admin-content-card admin-fade-up admin-fade-delay-1"
                     style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                        gap: '10px',
-                        background: 'var(--brand-panel-card)',
-                        border: '1px solid var(--brand-panel-border)',
-                        borderRadius: '10px',
-                        padding: '14px',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+                        gap: '16px',
+                        padding: '20px 22px',
                     }}
                 >
                     <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>ESTATUS</div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
-                            {project.recordStatus} · {project.status}
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--admin-text-tertiary)' }}>
+                            ESTATUS
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--admin-text-primary)', marginTop: '2px', textTransform: 'capitalize' }}>
+                            {project.recordStatus} · {project.status.replace(/_/g, ' ')}
                         </div>
                     </div>
                     <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>ENTREGA ESTIMADA</div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>{formatDate(entrega)}</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--admin-text-tertiary)' }}>
+                            ENTREGA ESTIMADA
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--admin-text-primary)', marginTop: '2px' }}>
+                            {formatDate(entrega)}
+                        </div>
                     </div>
                     <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>PAGO</div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--admin-text-tertiary)' }}>
+                            PAGO
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--admin-text-primary)', marginTop: '2px' }}>
                             {project.paymentStatus === 'pagado' && (
                                 <>
                                     <strong style={{ color: 'var(--brand-orange)' }}>PAGADO</strong>
@@ -203,35 +204,41 @@ export default async function ProyectoDetallePage({
                 </div>
 
                 {project.notes && (
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg2)' }}>
-                        <strong style={{ color: 'var(--brand-panel-fg)' }}>Notas: </strong>
-                        {project.notes}
+                    <div className="admin-content-card admin-fade-up admin-fade-delay-2" style={{ padding: '18px 22px' }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, color: 'var(--admin-text-secondary)', marginBottom: '4px' }}>
+                            Notas
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-text-primary)', lineHeight: 1.5 }}>
+                            {project.notes}
+                        </div>
                     </div>
                 )}
 
-                <div>
-                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg2)', marginBottom: '4px' }}>
+                <section className="admin-content-card admin-fade-up admin-fade-delay-3" style={{ padding: '20px 22px' }}>
+                    <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--admin-text-secondary)' }}>
                         Fases del proyecto
                     </h2>
                     {project.recordStatus === 'borrador' && (
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: '0 0 8px' }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', margin: '4px 0 0' }}>
                             "Listo para Entrega" y "Entregado" no se muestran todavía: son banderas de estatus que
                             solo aplican una vez registrado el proyecto.
                         </p>
                     )}
-                    <PhaseTree
-                        nodes={tree.filter(
-                            (node) => project.recordStatus !== 'borrador' || !esPuntoSoloEstatus(node.mainPointKey ?? '')
-                        )}
-                        proyecto={{
-                            folio: project.folio,
-                            title: project.title,
-                            clientName: project.clientName,
-                            email: project.email,
-                            estimatedDelivery: entrega,
-                        }}
-                    />
-                </div>
+                    <div style={{ marginTop: '10px' }}>
+                        <PhaseTree
+                            nodes={tree.filter(
+                                (node) => project.recordStatus !== 'borrador' || !esPuntoSoloEstatus(node.mainPointKey ?? '')
+                            )}
+                            proyecto={{
+                                folio: project.folio,
+                                title: project.title,
+                                clientName: project.clientName,
+                                email: project.email,
+                                estimatedDelivery: entrega,
+                            }}
+                        />
+                    </div>
+                </section>
             </div>
         </main>
     )

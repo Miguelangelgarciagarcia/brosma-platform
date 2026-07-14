@@ -1,5 +1,7 @@
 'use client'
 
+import { createPortal } from 'react-dom'
+
 type Props = {
     destinatario: string
     mensaje: string
@@ -32,13 +34,16 @@ export default function ConfirmarCorreoModal({
     labelOmitir = 'Guardar sin avisar',
     labelConfirmar = 'Guardar y avisar',
 }: Props) {
-    return (
+    // Portal a <body>: mismo motivo que FirmaModal/AccountModal — un
+    // position:fixed anidado dentro de una tarjeta con animación de entrada
+    // puede quedar atrapado por la capa de composición de esa tarjeta.
+    return createPortal(
         <div
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 60,
-                background: 'rgba(0,0,0,0.7)',
+                zIndex: 9999,
+                background: 'rgba(6, 14, 22, 0.6)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -46,10 +51,8 @@ export default function ConfirmarCorreoModal({
             }}
         >
             <div
+                className="admin-content-card"
                 style={{
-                    background: 'var(--brand-panel-card)',
-                    border: '1px solid var(--brand-panel-border)',
-                    borderRadius: '16px',
                     width: '100%',
                     maxWidth: '480px',
                     maxHeight: '90vh',
@@ -62,10 +65,10 @@ export default function ConfirmarCorreoModal({
                 }}
             >
                 <div>
-                    <h3 style={{ fontFamily: 'var(--font-body)', margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                    <h3 style={{ fontFamily: 'var(--font-body)', margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                         {titulo}
                     </h3>
-                    <p style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>
+                    <p style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '12px', color: 'var(--admin-text-secondary)' }}>
                         {descripcion ??
                             `¿Quieres avisarle al cliente (${destinatario || 'sin correo registrado'})? Puedes revisar o editar el mensaje antes de mandarlo.`}
                     </p>
@@ -75,15 +78,12 @@ export default function ConfirmarCorreoModal({
                     value={mensaje}
                     onChange={(e) => onChangeMensaje(e.target.value)}
                     rows={8}
-                    className="brand-panel-input"
+                    className="admin-input"
                     style={{
                         width: '100%',
                         boxSizing: 'border-box',
-                        background: 'var(--brand-panel-input)',
-                        border: '1px solid var(--brand-panel-border)',
-                        borderRadius: '6px',
+                        borderRadius: '10px',
                         padding: '10px 12px',
-                        color: 'var(--brand-panel-fg)',
                         fontSize: '13px',
                         resize: 'vertical',
                         fontFamily: 'var(--font-body)',
@@ -98,11 +98,11 @@ export default function ConfirmarCorreoModal({
                         style={{
                             flex: '1 1 120px',
                             fontFamily: 'var(--font-body)',
-                            border: '1px solid var(--brand-panel-border)',
-                            color: 'var(--brand-panel-fg2)',
+                            border: '1px solid var(--admin-card-border)',
+                            color: 'var(--admin-text-secondary)',
                             background: 'none',
                             padding: '10px',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             fontSize: '13px',
                         }}
@@ -116,11 +116,11 @@ export default function ConfirmarCorreoModal({
                         style={{
                             flex: '1 1 120px',
                             fontFamily: 'var(--font-body)',
-                            border: '1px solid var(--brand-panel-border)',
-                            color: 'var(--brand-panel-fg)',
-                            background: 'var(--brand-panel-input)',
+                            border: '1px solid var(--admin-card-border)',
+                            color: 'var(--admin-text-primary)',
+                            background: '#ffffff',
                             padding: '10px',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             fontSize: '13px',
                         }}
@@ -138,7 +138,7 @@ export default function ConfirmarCorreoModal({
                             color: '#fff',
                             background: 'var(--brand-orange)',
                             padding: '10px',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             cursor: destinatario ? 'pointer' : 'not-allowed',
                             fontSize: '13px',
                             fontWeight: 700,
@@ -149,6 +149,7 @@ export default function ConfirmarCorreoModal({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     )
 }
