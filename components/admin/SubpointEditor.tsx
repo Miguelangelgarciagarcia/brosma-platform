@@ -100,11 +100,8 @@ type Props = {
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--brand-panel-input)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     padding: '8px 10px',
-    color: 'var(--brand-panel-fg)',
     fontFamily: 'var(--font-body)',
     fontSize: '13px',
 }
@@ -189,15 +186,13 @@ export default function SubpointEditor({
                 return (
                     <div
                         key={node.clientId}
+                        className="admin-subpanel"
                         style={{
-                            border: '1px solid var(--brand-panel-border)',
                             borderLeft: '2px solid var(--brand-orange)',
-                            borderRadius: '6px',
                             padding: '10px',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '8px',
-                            background: 'rgba(255,255,255,0.03)',
                         }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
@@ -216,13 +211,13 @@ export default function SubpointEditor({
                                     minWidth: 0,
                                 }}
                             >
-                                <span style={{ fontSize: '10px', color: 'var(--brand-panel-fg3)' }}>{colapsado ? '▶' : '▼'}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--admin-text-tertiary)' }}>{colapsado ? '▶' : '▼'}</span>
                                 <span style={{ fontSize: '11px', color: 'var(--brand-orange)', fontFamily: 'monospace' }}>
                                     Subpunto {label}
                                 </span>
                                 {colapsado && (
-                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg2)' }}>
-                                        {node.title || <em style={{ color: 'var(--brand-panel-fg3)' }}>sin título</em>}
+                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-secondary)' }}>
+                                        {node.title || <em style={{ color: 'var(--admin-text-tertiary)' }}>sin título</em>}
                                         {dias > 0 && ` · ${dias} día${dias === 1 ? '' : 's'}`}
                                     </span>
                                 )}
@@ -232,8 +227,8 @@ export default function SubpointEditor({
                                             fontFamily: 'var(--font-body)',
                                             fontSize: '10px',
                                             fontWeight: 700,
-                                            color: '#ffffff',
-                                            background: 'rgba(255,255,255,0.14)',
+                                            color: 'var(--admin-text-primary)',
+                                            background: '#e4e7eb',
                                             borderRadius: '999px',
                                             padding: '2px 8px',
                                         }}
@@ -248,7 +243,7 @@ export default function SubpointEditor({
                                             fontSize: '10px',
                                             fontWeight: 700,
                                             color: 'var(--brand-orange)',
-                                            background: 'rgba(244,123,48,0.15)',
+                                            background: 'var(--admin-icon-orange-bg)',
                                             borderRadius: '999px',
                                             padding: '2px 8px',
                                         }}
@@ -265,7 +260,7 @@ export default function SubpointEditor({
                                         fontFamily: 'var(--font-body)',
                                         background: 'none',
                                         border: 'none',
-                                        color: '#ff6b6b',
+                                        color: 'var(--admin-icon-red-fg)',
                                         fontSize: '11px',
                                         cursor: 'pointer',
                                     }}
@@ -276,12 +271,12 @@ export default function SubpointEditor({
                         </div>
 
                         {!colapsado && bloqueado && (
-                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                                 Este subpunto ya lo marcó como completado un trabajador: no se puede editar ni eliminar.
                             </p>
                         )}
                         {!colapsado && soloDescripcionYFin && (
-                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                                 Este subpunto ya está en proceso: solo puedes ajustar la descripción y la fecha de
                                 término. Título, responsable y fecha de inicio quedan fijos, y no se puede eliminar.
                             </p>
@@ -294,7 +289,7 @@ export default function SubpointEditor({
                                     value={node.title}
                                     disabled={noEditable}
                                     onChange={(e) => updateNode(index, { title: e.target.value })}
-                                    className="brand-panel-input"
+                                    className="admin-input"
                                     style={{ ...inputStyle, opacity: noEditable ? 0.6 : 1 }}
                                 />
                                 <textarea
@@ -303,7 +298,7 @@ export default function SubpointEditor({
                                     disabled={bloqueado}
                                     onChange={(e) => updateNode(index, { description: e.target.value })}
                                     rows={2}
-                                    className="brand-panel-input"
+                                    className="admin-input"
                                     style={{ ...inputStyle, resize: 'vertical' as const, opacity: bloqueado ? 0.6 : 1 }}
                                 />
 
@@ -312,7 +307,7 @@ export default function SubpointEditor({
                                         value={node.responsibleId}
                                         disabled={noEditable}
                                         onChange={(e) => updateNode(index, { responsibleId: e.target.value })}
-                                        className="brand-panel-input"
+                                        className="admin-input"
                                         style={{ ...inputStyle, opacity: noEditable ? 0.6 : 1 }}
                                     >
                                         <option value="">Responsable...</option>
@@ -329,8 +324,8 @@ export default function SubpointEditor({
                                         max={parentEnd || undefined}
                                         disabled={noEditable}
                                         onChange={(e) => updateNode(index, { startDate: e.target.value })}
-                                        className="brand-panel-input"
-                                        style={{ ...inputStyle, colorScheme: 'dark', opacity: noEditable ? 0.6 : 1 }}
+                                        className="admin-input"
+                                        style={{ ...inputStyle, opacity: noEditable ? 0.6 : 1 }}
                                     />
                                     <input
                                         type="date"
@@ -339,23 +334,23 @@ export default function SubpointEditor({
                                         max={parentEnd || undefined}
                                         disabled={bloqueado}
                                         onChange={(e) => updateNode(index, { endDate: e.target.value })}
-                                        className="brand-panel-input"
-                                        style={{ ...inputStyle, colorScheme: 'dark', opacity: bloqueado ? 0.6 : 1 }}
+                                        className="admin-input"
+                                        style={{ ...inputStyle, opacity: bloqueado ? 0.6 : 1 }}
                                     />
                                 </div>
 
                                 {fechasInvertidas && (
-                                    <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: 0 }}>
+                                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--admin-icon-red-fg)', fontSize: '11px', margin: 0 }}>
                                         La fecha final no puede ser anterior a la fecha de inicio.
                                     </p>
                                 )}
                                 {!fechasInvertidas && fueraDeRangoPadre && (
-                                    <p style={{ fontFamily: 'var(--font-body)', color: '#ff6b6b', fontSize: '11px', margin: 0 }}>
+                                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--admin-icon-red-fg)', fontSize: '11px', margin: 0 }}>
                                         Las fechas deben estar dentro del rango de "{pathLabel}" ({parentStart} a {parentEnd}).
                                     </p>
                                 )}
                                 {!fechasInvertidas && !fueraDeRangoPadre && dias > 0 && (
-                                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--brand-panel-fg3)', fontSize: '11px', margin: 0 }}>
+                                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--admin-text-tertiary)', fontSize: '11px', margin: 0 }}>
                                         Duración: {dias} día{dias === 1 ? '' : 's'} (cuenta todos los días del rango, incluyendo domingos).
                                     </p>
                                 )}
@@ -403,10 +398,10 @@ export default function SubpointEditor({
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '12px',
                                 fontWeight: 700,
-                                color: bloqueado ? 'var(--brand-panel-fg3)' : 'var(--brand-orange)',
+                                color: bloqueado ? 'var(--admin-text-tertiary)' : 'var(--brand-orange)',
                                 background: 'none',
-                                border: '1px dashed var(--brand-panel-border)',
-                                borderRadius: '6px',
+                                border: '1px dashed var(--admin-card-border)',
+                                borderRadius: '8px',
                                 padding: '6px 12px',
                                 cursor: bloqueado ? 'not-allowed' : 'pointer',
                                 opacity: bloqueado ? 0.6 : 1,
@@ -415,7 +410,7 @@ export default function SubpointEditor({
                             + Agregar subpunto {pathLabel ? `de ${pathLabel}` : ''}
                         </button>
                         {bloqueado && (
-                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)', margin: 0 }}>{motivo}</p>
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--admin-text-tertiary)', margin: 0 }}>{motivo}</p>
                         )}
                     </>
                 )

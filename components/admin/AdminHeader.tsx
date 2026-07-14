@@ -1,4 +1,4 @@
-import { signOut } from '@/lib/auth'
+import { signOutAction } from '@/lib/actions'
 import AdminNav from '@/components/admin/AdminNav'
 
 type AdminHeaderProps = {
@@ -49,10 +49,7 @@ export default function AdminHeader({ userName, userEmail, userRole }: AdminHead
                 userName={userName}
                 userEmail={userEmail}
                 userRole={userRole}
-                signOutAction={async () => {
-                    'use server'
-                    await signOut({ redirectTo: '/login' })
-                }}
+                signOutAction={signOutAction}
             />
         </header>
     )

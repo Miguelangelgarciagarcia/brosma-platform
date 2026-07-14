@@ -21,9 +21,9 @@ type AdminNavProps = {
     userName?: string | null
     userEmail?: string | null
     userRole?: string | null
-    // Server action de signOut, definida en AdminHeader (server component) y
-    // pasada aquí como prop — Next.js permite mandar server actions a un
-    // client component como esta.
+    // Server action de signOut, declarada en lib/actions.ts ("use server") y
+    // pasada aquí como prop desde AdminHeader — Next.js permite mandar server
+    // actions ya definidas a un client component como esta.
     signOutAction: () => Promise<void>
 }
 

@@ -237,8 +237,7 @@ select.brand-panel-input option {
    Dashboard Admin — rediseño "light" (tema claro, header navy)
    ================================================================
    Vive aparte de --brand-panel-* (que sigue siendo dark, para las
-   pantallas del panel interno que todavía no se han rediseñado:
-   Registrar, Configuración, detalle de proyecto...).
+   pantallas del panel interno que todavía no se han rediseñado).
    Se va aplicando pantalla por pantalla; por eso son variables
    nuevas y no un reemplazo de las de arriba. */
 :root {
@@ -263,6 +262,8 @@ select.brand-panel-input option {
   --admin-icon-red-fg: #e0403f;
   --admin-success-bg: #e6f6ee;
   --admin-success-fg: #157a4a;
+  --admin-warning-bg: #fef3c7;
+  --admin-warning-fg: #92400e;
 }
 
 .admin-stat-card {
@@ -286,10 +287,7 @@ select.brand-panel-input option {
 }
 
 /* Animación de entrada del dashboard: fade + leve deslizamiento hacia
-   arriba, escalonado (header primero, luego saludo/CTA, stat cards, y por
-   último la lista de proyectos fila por fila desde ProjectCard.tsx). Todo
-   se resuelve en CSS/inline porque estas piezas son server components, sin
-   JS del lado del cliente. Duraciones/retrasos generosos (más lento que un
+   arriba, escalonado. Duraciones/retrasos generosos (más lento que un
    fade-in típico) para que se sienta suave, no apresurado. */
 .admin-fade-up {
   animation: brandFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -303,14 +301,20 @@ select.brand-panel-input option {
   animation-delay: 0.36s;
 }
 
+.admin-fade-delay-4 {
+  animation-delay: 0.66s;
+}
+
+.admin-fade-delay-5 {
+  animation-delay: 0.78s;
+}
+
 .admin-fade-delay-3 {
   animation-delay: 0.54s;
 }
 
 /* Filas del historial (HistorialCard): mismo fade-up escalonado que la
-   lista del dashboard, pero resuelto con nth-child en vez de JS/inline
-   porque aquí no hay ninguna animación condicional (como el parpadeo de
-   atrasado) con la que combinarse — no hace falta pasar un "index" prop. */
+   lista del dashboard, pero resuelto con nth-child en vez de JS/inline. */
 .admin-history-row {
   animation: brandFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -345,8 +349,7 @@ a.admin-history-row:hover {
 }
 
 /* Input de texto en tema claro: lo usa el buscador de Historial
-   (.admin-search-input) y los formularios de Configuración (.admin-input,
-   mismo aspecto, nombre genérico porque ahí no son búsquedas). */
+   (.admin-search-input) y los formularios del panel (.admin-input). */
 .admin-input,
 .admin-search-input {
   border: 1px solid var(--admin-card-border);
@@ -383,17 +386,16 @@ a.admin-history-row:hover {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* "Subpanel" dentro de una tarjeta de módulo (Configuración): el módulo ya
-   es blanco (.admin-content-card), así que sus piezas internas (form de
-   alta, filas de cuentas/puntos) usan un tono gris muy sutil para que se
-   distingan del fondo blanco del módulo sin competir con él. */
+/* "Subpanel" dentro de una tarjeta de módulo: el módulo ya es blanco
+   (.admin-content-card), así que sus piezas internas usan un tono gris
+   muy sutil para que se distingan del fondo blanco sin competir con él. */
 .admin-subpanel {
   background: var(--admin-content-bg);
   border: 1px solid var(--admin-card-border);
   border-radius: 12px;
 }
 
-/* Botones chicos (subir/bajar/activar) de Configuración, en tema claro. */
+/* Botones chicos (subir/bajar/activar) en tema claro. */
 .admin-light-btn {
   background: #ffffff;
   transition: background 0.15s ease, border-color 0.15s ease;
@@ -408,8 +410,8 @@ a.admin-history-row:hover {
   cursor: not-allowed;
 }
 
-/* Botón de "ojo" para mostrar/ocultar la contraseña temporal, superpuesto
-   dentro del input (Configuración > Usuarios). */
+/* Botón de "ojo" para mostrar/ocultar contraseña, superpuesto dentro del
+   input. También reutilizado como botón de cerrar (X) en modales. */
 .admin-password-toggle {
   position: absolute;
   top: 50%;
@@ -462,23 +464,22 @@ a.admin-project-row:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Barra unificada del panel interno (AdminHeader + AdminNav).
-   Mobile-first: por default es una fila simple (logo + hamburguesa). En
-   escritorio pasa a grid de 3 columnas para poder centrar el nav respecto
-   a todo el ancho de la barra (logo | nav centrado | usuario+salir),
-   como en cualquier dashboard con topbar de tres zonas. */
+/* Barra unificada del panel interno (AdminHeader + AdminNav). Mobile-first:
+   por default es una fila simple (logo + hamburguesa). En escritorio pasa
+   a grid de 3 columnas para poder centrar el nav respecto a todo el ancho
+   de la barra. z-index explícito (no solo position:relative en el inline
+   style): sin esto, el contenido de abajo (hero navy + stat cards, con sus
+   propias animaciones de entrada) puede terminar en una capa de
+   composición que el navegador pinta encima del menú móvil desplegable
+   pese a que ese panel también tiene z-index. Forzar aquí un stacking
+   context de mayor jerarquía resuelve el problema de raíz para header y
+   menú móvil juntos. */
 .admin-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   animation: brandFadeIn 0.6s ease both;
-  /* z-index explícito (no solo position:relative en el inline style): sin
-     esto, el contenido de abajo (hero navy + stat cards, con sus propias
-     animaciones de entrada) puede terminar en una capa de composición que
-     el navegador pinta encima del menú móvil desplegable pese a que ese
-     panel también tiene z-index. Forzar aquí un stacking context de mayor
-     jerarquía resuelve el problema de raíz para header y menú móvil juntos. */
   z-index: 50;
 }
 
@@ -522,9 +523,8 @@ a.admin-project-row:hover {
 
 /* Nota: antes .admin-topbar-desktop traía "display: flex" puesto directo
    en el style inline del elemento, que siempre gana sobre esta regla de
-   CSS (los estilos inline superan a las clases salvo !important) — por
-   eso el nav de escritorio no se ocultaba de verdad en móvil. Ahora
-   .admin-topbar-nav/.admin-topbar-user no traen display inline: el
+   CSS — por eso el nav de escritorio no se ocultaba de verdad en móvil.
+   Ahora .admin-topbar-nav/.admin-topbar-user no traen display inline: el
    display final lo decide nada más esta hoja de estilos. */
 @media (max-width: 880px) {
   .admin-topbar-nav,

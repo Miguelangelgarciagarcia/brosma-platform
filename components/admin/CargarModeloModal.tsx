@@ -20,11 +20,8 @@ type Props = {
 const inputStyle: React.CSSProperties = {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--brand-panel-input)',
-    border: '1px solid var(--brand-panel-border)',
-    borderRadius: '6px',
+    borderRadius: '10px',
     padding: '10px 12px',
-    color: 'var(--brand-panel-fg)',
     fontFamily: 'var(--font-body)',
     fontSize: '13px',
 }
@@ -50,7 +47,7 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 60,
+                zIndex: 9999,
                 background: 'rgba(0,0,0,0.7)',
                 display: 'flex',
                 alignItems: 'center',
@@ -59,10 +56,8 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
             }}
         >
             <div
+                className="admin-content-card"
                 style={{
-                    background: 'var(--brand-panel-card)',
-                    border: '1px solid var(--brand-panel-border)',
-                    borderRadius: '16px',
                     width: '100%',
                     maxWidth: '480px',
                     maxHeight: '90vh',
@@ -75,19 +70,20 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                    <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                         Cargar modelo
                     </h3>
                     <button
                         type="button"
                         onClick={onCerrar}
-                        style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--brand-panel-fg3)' }}
+                        className="admin-password-toggle"
+                        style={{ position: 'static', fontSize: '18px' }}
                     >
                         ✕
                     </button>
                 </div>
 
-                <p style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>
+                <p style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '12px', color: 'var(--admin-text-secondary)' }}>
                     Elige un proyecto ya registrado para copiar su estructura de puntos y subpuntos (fechas y
                     responsables incluidos). Los puntos que coincidan con el catálogo actual se llenan; los que no
                     tengan coincidencia quedan vacíos, y las fechas se recorren para que arranquen hoy.
@@ -98,19 +94,19 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
                     placeholder="Buscar por folio, título o cliente..."
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    className="brand-panel-input"
+                    className="admin-input"
                     style={inputStyle}
                     disabled={cargando}
                 />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {buscando && (
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                             Buscando...
                         </p>
                     )}
                     {!buscando && resultados.length === 0 && (
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg3)', margin: 0 }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-tertiary)', margin: 0 }}>
                             No se encontraron proyectos registrados con ese criterio.
                         </p>
                     )}
@@ -121,11 +117,9 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
                                 type="button"
                                 disabled={cargando}
                                 onClick={() => onElegir(p.folio)}
+                                className="admin-subpanel"
                                 style={{
                                     textAlign: 'left',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid var(--brand-panel-border)',
-                                    borderRadius: '8px',
                                     padding: '10px 12px',
                                     cursor: cargando ? 'not-allowed' : 'pointer',
                                     opacity: cargando ? 0.6 : 1,
@@ -135,10 +129,10 @@ export default function CargarModeloModal({ onElegir, onCerrar, cargando }: Prop
                                 }}
                             >
                                 <span style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--brand-orange)' }}>{p.folio}</span>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--brand-panel-fg)' }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
                                     {p.title}
                                 </span>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--brand-panel-fg3)' }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--admin-text-tertiary)' }}>
                                     {p.clientName}
                                     {p.company ? ` · ${p.company}` : ''} · {p.status === 'entregado' ? 'Entregado' : 'En proceso'}
                                 </span>

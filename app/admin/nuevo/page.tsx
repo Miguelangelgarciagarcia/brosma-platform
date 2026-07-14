@@ -21,5 +21,13 @@ export default async function NuevoProyectoPage() {
     // una sola vez aquí y se copia al formulario. A partir de ese momento el
     // proyecto queda independiente de cambios futuros en el catálogo.
     const catalogoPuntos = await obtenerPuntosParaNuevoProyecto()
-    return <ProyectoForm mode="crear" catalogoPuntos={catalogoPuntos} />
+    return (
+        <ProyectoForm
+            mode="crear"
+            catalogoPuntos={catalogoPuntos}
+            userName={session.user?.name}
+            userEmail={session.user?.email}
+            userRole={session.user?.role}
+        />
+    )
 }
