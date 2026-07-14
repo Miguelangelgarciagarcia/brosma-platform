@@ -462,7 +462,17 @@ export default function ProyectoForm({ mode, folio, initial, catalogoPuntos, use
                 mainPoints: mainPoints.map((mp) => ({
                     mainPointKey: mp.mainPointKey,
                     title: mp.label,
-                    responsibleId: mp.responsibleId || trabajadores[0]?.id || '',
+                    // Nunca inventar un encargado: si el usuario no eligió
+                    // uno, se manda vacío. Antes esto caía en
+                    // trabajadores[0]?.id (el primero de la lista, al azar
+                    // desde la perspectiva del usuario) — asignaba trabajo a
+                    // alguien que nadie eligió, tanto al guardar borrador
+                    // como al registrar. La validación de arriba ya bloquea
+                    // registrar sin responsable en los puntos con trabajo
+                    // real; para borrador y "solo estatus" el servidor
+                    // aplica su propio respaldo documentado (el id del
+                    // Admin que guarda), no un trabajador cualquiera.
+                    responsibleId: mp.responsibleId,
                     estimatedDays: esPuntoSoloEstatus(mp.mainPointKey) ? 0 : diasCalculados(mp.children),
                     children: mp.children.length ? limpiarSubpuntosParaEnvio(mp.children) : undefined,
                 })),
