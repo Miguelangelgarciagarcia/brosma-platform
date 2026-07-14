@@ -23,31 +23,34 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     return (
         <Link
             href={`/admin/proyecto/${project.folio}`}
-            className="brand-panel-card"
+            className="admin-content-card admin-project-row"
             style={{
                 position: 'relative',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '12px',
-                // El "coloreado" según avance: un relleno de izquierda a
-                // derecha (naranja tenue) que crece con el % — se nota el
-                // avance de un vistazo sin tener que leer el número.
-                background: `linear-gradient(90deg, rgba(244,123,48,0.16) ${project.progreso}%, var(--brand-panel-card) ${project.progreso}%)`,
-                border: '1px solid var(--brand-panel-border)',
-                borderRadius: '10px',
-                padding: '14px 16px',
+                gap: '16px',
+                padding: '16px 18px',
                 textDecoration: 'none',
-                color: 'var(--brand-panel-fg)',
-                transition: 'background 0.15s ease, border-color 0.15s ease',
-                animation: project.atrasado ? 'brandBlinkAtraso 1.4s ease-in-out infinite' : 'none',
+                color: 'var(--admin-text-primary)',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                borderColor: project.atrasado ? '#f3b3b2' : undefined,
+                animation: project.atrasado ? 'brandBlinkAtrasoLight 1.6s ease-in-out infinite' : 'none',
             }}
         >
-            <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--brand-orange)', marginBottom: '4px' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                    style={{
+                        fontFamily: 'monospace',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: 'var(--brand-orange)',
+                        marginBottom: '4px',
+                    }}
+                >
                     {project.folio}
                     {project.recordStatus === 'borrador' && (
-                        <span style={{ marginLeft: '8px', color: 'var(--brand-panel-fg3)', fontFamily: 'var(--font-body)' }}>
+                        <span style={{ marginLeft: '8px', color: 'var(--admin-text-tertiary)', fontFamily: 'var(--font-body)', fontWeight: 500 }}>
                             · borrador
                         </span>
                     )}
@@ -57,6 +60,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         fontFamily: 'var(--font-body)',
                         fontWeight: 700,
                         fontSize: '14px',
+                        color: 'var(--admin-text-primary)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -64,11 +68,34 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 >
                     {project.title}
                 </div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--brand-panel-fg2)' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--admin-text-secondary)', marginBottom: '10px' }}>
                     {project.clientName}
                     {project.company ? ` · ${project.company}` : ''}
                 </div>
+
+                {/* Barra de progreso: mismo % que antes (calcularProgreso),
+                    ahora como barra explícita en vez de gradiente de fondo,
+                    para que se lea bien sobre un card blanco. */}
+                <div
+                    style={{
+                        height: '6px',
+                        borderRadius: '999px',
+                        background: '#eef1f4',
+                        overflow: 'hidden',
+                        maxWidth: '320px',
+                    }}
+                >
+                    <div
+                        style={{
+                            height: '100%',
+                            width: `${project.progreso}%`,
+                            borderRadius: '999px',
+                            background: 'var(--brand-orange)',
+                        }}
+                    />
+                </div>
             </div>
+
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {project.atrasado && (
                     <div
@@ -80,9 +107,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                             fontFamily: 'var(--font-body)',
                             fontSize: '10px',
                             fontWeight: 700,
-                            color: '#ff6b6b',
+                            color: 'var(--admin-icon-red-fg)',
                             letterSpacing: '0.06em',
-                            marginBottom: '2px',
+                            marginBottom: '4px',
                         }}
                     >
                         <span
@@ -90,29 +117,29 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                                 width: '7px',
                                 height: '7px',
                                 borderRadius: '50%',
-                                background: '#ff3b3b',
+                                background: 'var(--admin-icon-red-fg)',
                                 flexShrink: 0,
                                 animation: 'brandBlinkDot 1s ease-in-out infinite',
                             }}
                         />
-                        PROYECTO ATRASADO
+                        ATRASADO
                     </div>
                 )}
                 <div
                     style={{
                         fontFamily: 'var(--font-body)',
                         fontSize: '10px',
-                        color: 'var(--brand-panel-fg3)',
+                        color: 'var(--admin-text-tertiary)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.06em',
                     }}
                 >
                     Entrega estimada
                 </div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--brand-panel-fg)' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--admin-text-primary)' }}>
                     {formatDate(entrega)}
                 </div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--brand-panel-fg3)', marginTop: '2px' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '10px', color: 'var(--admin-text-tertiary)', marginTop: '2px' }}>
                     {project.progreso}% avance
                 </div>
             </div>

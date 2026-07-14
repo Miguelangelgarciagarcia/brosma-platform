@@ -223,3 +223,153 @@ select.brand-panel-input option {
   background: var(--brand-panel-card);
   color: var(--brand-panel-fg);
 }
+
+/* ================================================================
+   Dashboard Admin — rediseño "light" (tema claro, header navy)
+   ================================================================
+   Vive aparte de --brand-panel-* (que sigue siendo dark, para las
+   pantallas del panel interno que todavía no se han rediseñado:
+   Registrar, Historial, Configuración, detalle de proyecto...).
+   Se va aplicando pantalla por pantalla; por eso son variables
+   nuevas y no un reemplazo de las de arriba. */
+:root {
+  --admin-topbar-bg: var(--brand-navy-deep);
+  --admin-topbar-bg-elev: var(--brand-navy);
+  --admin-topbar-border: rgba(255, 255, 255, 0.1);
+  --admin-topbar-fg: #ffffff;
+  --admin-topbar-fg2: rgba(255, 255, 255, 0.62);
+
+  --admin-content-bg: #f4f6f8;
+  --admin-card-bg: #ffffff;
+  --admin-card-border: #e6e9ee;
+  --admin-text-primary: #10202e;
+  --admin-text-secondary: #667085;
+  --admin-text-tertiary: #98a2b3;
+
+  --admin-icon-orange-bg: #fdece0;
+  --admin-icon-orange-fg: var(--brand-orange);
+  --admin-icon-navy-bg: #e4ecf1;
+  --admin-icon-navy-fg: var(--brand-navy);
+  --admin-icon-red-bg: #fde3e3;
+  --admin-icon-red-fg: #e0403f;
+}
+
+.admin-stat-card {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-card-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(16, 32, 46, 0.04), 0 12px 24px -12px rgba(16, 32, 46, 0.12);
+}
+
+.admin-content-card {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-card-border);
+  border-radius: 14px;
+}
+
+a.admin-project-row:hover {
+  border-color: rgba(244, 123, 48, 0.45);
+  box-shadow: 0 4px 14px rgba(16, 32, 46, 0.08);
+}
+
+.admin-nav-pill {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-nav-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Barra unificada del panel interno (AdminHeader + AdminNav).
+   Mobile-first: por default es una fila simple (logo + hamburguesa). En
+   escritorio pasa a grid de 3 columnas para poder centrar el nav respecto
+   a todo el ancho de la barra (logo | nav centrado | usuario+salir),
+   como en cualquier dashboard con topbar de tres zonas. */
+.admin-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.admin-account-link:hover {
+  opacity: 0.82;
+}
+
+.admin-hamburger-btn {
+  display: none;
+}
+
+@media (min-width: 881px) {
+  .admin-header-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .admin-topbar-nav {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .admin-topbar-user {
+    grid-column: 3;
+    justify-self: end;
+  }
+}
+
+/* Nota: antes .admin-topbar-desktop traía "display: flex" puesto directo
+   en el style inline del elemento, que siempre gana sobre esta regla de
+   CSS (los estilos inline superan a las clases salvo !important) — por
+   eso el nav de escritorio no se ocultaba de verdad en móvil. Ahora
+   .admin-topbar-nav/.admin-topbar-user no traen display inline: el
+   display final lo decide nada más esta hoja de estilos. */
+@media (max-width: 880px) {
+  .admin-topbar-nav,
+  .admin-topbar-user {
+    display: none;
+  }
+
+  .admin-hamburger-btn {
+    display: inline-flex;
+  }
+}
+
+.admin-mobile-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--admin-topbar-bg-elev);
+  border-top: 1px solid var(--admin-topbar-border);
+  border-bottom: 1px solid var(--admin-topbar-border);
+  padding: 14px 20px 18px;
+  z-index: 40;
+}
+
+/* Parpadeo de atraso, versión clara: el card es blanco, así que el glow
+   rojo se ve como borde + sombra en vez del glow sobre fondo oscuro de
+   brandBlinkAtraso. */
+@keyframes brandBlinkAtrasoLight {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 64, 63, 0.35);
+    border-color: #f3b3b2;
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(224, 64, 63, 0.14);
+    border-color: #e0403f;
+  }
+}

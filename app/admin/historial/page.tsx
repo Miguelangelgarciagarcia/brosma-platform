@@ -2,7 +2,6 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import AdminHeader from '@/components/admin/AdminHeader'
-import AdminNav from '@/components/admin/AdminNav'
 import HistorialCard from '@/components/admin/HistorialCard'
 
 export default async function HistorialPage({
@@ -43,7 +42,6 @@ export default async function HistorialPage({
     return (
         <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
-            <AdminNav />
 
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <h1 style={{ fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--brand-panel-fg)' }}>

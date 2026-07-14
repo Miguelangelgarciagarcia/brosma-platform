@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AdminHeader from '@/components/admin/AdminHeader'
-import AdminNav from '@/components/admin/AdminNav'
 import UserForm from '@/components/admin/UserForm'
 import MainPointCatalogManager from '@/components/admin/MainPointCatalogManager'
 import { formatDate } from '@/lib/dates'
@@ -24,7 +23,6 @@ export default async function ConfiguracionPage() {
     return (
         <main style={{ minHeight: '100vh', background: 'var(--brand-panel-bg)' }}>
             <AdminHeader userName={session.user?.name} userRole={session.user?.role} />
-            <AdminNav />
 
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
