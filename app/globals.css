@@ -303,6 +303,10 @@ select.brand-panel-input option {
   animation-delay: 0.36s;
 }
 
+.admin-fade-delay-3 {
+  animation-delay: 0.54s;
+}
+
 /* Filas del historial (HistorialCard): mismo fade-up escalonado que la
    lista del dashboard, pero resuelto con nth-child en vez de JS/inline
    porque aquí no hay ninguna animación condicional (como el parpadeo de
