@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import AdminHeader from '@/components/admin/AdminHeader'
+import EliminarProyectoButton from '@/components/admin/EliminarProyectoButton'
 import { formatDate } from '@/lib/dates'
 import { esPuntoSoloEstatus } from '@/lib/main-points'
 import PhaseTree from '@/components/admin/PhaseTree'
@@ -140,6 +141,9 @@ export default async function ProyectoDetallePage({
                                 <a href={`/api/proyectos/${project.folio}/gantt`} style={actionOutlineStyle}>
                                     Descargar diagrama Gantt
                                 </a>
+                            )}
+                            {session.user?.role === 'admin' && (
+                                <EliminarProyectoButton folio={project.folio} title={project.title} />
                             )}
                         </div>
                     </div>
