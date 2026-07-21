@@ -165,8 +165,11 @@ export default function ProyectoRegistradoForm({ folio, initial, userName, userE
         fetch('/api/usuarios')
             .then((r) => r.json())
             .then((data) => {
+                // Trabajadores y Admins son igual de asignables como
+                // responsable/encargado: un Admin también puede quedar
+                // operando un punto o subpunto, no solo supervisando.
                 if (Array.isArray(data)) {
-                    setTrabajadores(data.filter((u: any) => u.role === 'trabajador'))
+                    setTrabajadores(data.filter((u: any) => u.role === 'trabajador' || u.role === 'admin'))
                 }
             })
     }, [])

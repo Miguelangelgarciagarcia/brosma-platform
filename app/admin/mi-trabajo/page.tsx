@@ -1,14 +1,22 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { signOutAction } from '@/lib/actions'
-import WorkerHeader from '@/components/trabajo/WorkerHeader'
+import AdminHeader from '@/components/admin/AdminHeader'
 import CarruselHoy from '@/components/trabajo/CarruselHoy'
 import PendientesFinalizadosTabs from '@/components/trabajo/PendientesFinalizadosTabs'
 import { obtenerMiTrabajo } from '@/lib/mi-trabajo'
 
-export default async function TrabajoPage() {
+// "Mi trabajo": la misma vista que ve un Trabajador en /trabajo (Corriendo
+// hoy, Pendientes, Finalizados, A mi cargo), pero dentro del panel de Admin
+// (mismo AdminHeader/nav que Dashboard, Registrar, Historial y
+// Configuración) — ahora que un Admin también puede quedar asignado como
+// responsable de un punto o subpunto en los combobox, necesita un lugar
+// para darle seguimiento a lo que se le asignó a él directamente. La
+// consulta y el agrupado son exactamente los mismos que en /trabajo (ver
+// lib/mi-trabajo.ts), solo cambia el header/hero alrededor.
+export default async function AdminMiTrabajoPage() {
     const session = await auth()
     if (!session) redirect('/login')
+    if (session.user?.role !== 'admin') redirect('/trabajo')
 
     const {
         carrusel,
@@ -22,19 +30,16 @@ export default async function TrabajoPage() {
 
     return (
         <main style={{ minHeight: '100vh', background: 'var(--admin-content-bg)' }}>
-            <WorkerHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} signOutAction={signOutAction} />
+            <AdminHeader userName={session.user?.name} userEmail={session.user?.email} userRole={session.user?.role} />
 
-            {/* Hero navy: mismo patrón que el panel Admin (dashboard, historial,
-                configuración...), para que Trabajo tenga la misma línea gráfica
-                y se sienta parte de la misma plataforma. */}
             <section style={{ background: 'var(--admin-topbar-bg)', padding: '28px 20px 64px' }}>
-                <div className="admin-fade-up admin-fade-delay-1" style={{ maxWidth: '860px', margin: '0 auto' }}>
-                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(22px, 4vw, 28px)', color: '#ffffff', margin: '0 0 4px' }}>
-                        ¡Bienvenido, {session.user?.name?.split(' ')[0]}!
-                    </h1>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-topbar-fg2)', margin: 0 }}>
-                        Esto es lo que tienes en puerta hoy.
+                <div className="admin-fade-up" style={{ maxWidth: '860px', margin: '0 auto' }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--admin-topbar-fg2)', margin: '0 0 4px' }}>
+                        Mi trabajo
                     </p>
+                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(22px, 4vw, 28px)', color: '#ffffff', margin: 0 }}>
+                        Lo que tienes en puerta hoy
+                    </h1>
                 </div>
             </section>
 

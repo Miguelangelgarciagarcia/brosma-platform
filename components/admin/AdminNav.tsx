@@ -14,6 +14,7 @@ const links = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/nuevo', label: 'Registrar' },
     { href: '/admin/historial', label: 'Historial' },
+    { href: '/admin/mi-trabajo', label: 'Mi trabajo' },
     { href: '/admin/configuracion', label: 'Configuración' },
 ]
 
