@@ -45,7 +45,11 @@ export default function UserForm() {
             })
             const json = await res.json()
             if (!res.ok) throw new Error(json.error || 'Error al crear el usuario')
-            setOk(`Cuenta creada: ${json.email}. Comparte la contraseña temporal con la persona y pídele que la cambie en "Mi cuenta".`)
+            setOk(
+                json.correoVerificacionEnviado
+                    ? `Cuenta creada: ${json.email}. Le llegó un correo para confirmar su cuenta (no podrá iniciar sesión hasta hacerlo). Comparte también la contraseña temporal y pídele que la cambie en "Mi cuenta".`
+                    : `Cuenta creada: ${json.email}, pero no se pudo enviar el correo de verificación. Puedes reenviarlo desde la lista de cuentas de aquí abajo.`
+            )
             setName('')
             setEmail('')
             setPassword('')

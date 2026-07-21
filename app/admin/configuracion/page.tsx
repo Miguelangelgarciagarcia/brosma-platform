@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import AdminHeader from '@/components/admin/AdminHeader'
 import UserForm from '@/components/admin/UserForm'
+import ReenviarVerificacionButton from '@/components/admin/ReenviarVerificacionButton'
 import MainPointCatalogManager from '@/components/admin/MainPointCatalogManager'
 import CambiarContrasenaButton from '@/components/admin/CambiarContrasenaButton'
 import { formatDate } from '@/lib/dates'
@@ -36,7 +37,7 @@ export default async function ConfiguracionPage() {
     if (session.user?.role !== 'admin') redirect('/trabajo')
 
     const usuarios = await prisma.user.findMany({
-        select: { id: true, name: true, email: true, role: true, createdAt: true },
+        select: { id: true, name: true, email: true, role: true, emailVerified: true, createdAt: true },
         orderBy: { createdAt: 'asc' },
     })
 
@@ -219,10 +220,17 @@ export default async function ConfiguracionPage() {
                                             className="admin-subpanel"
                                             style={{
                                                 display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px',
+                                                padding: '10px 12px',
+                                            }}
+                                        >
+                                        <div
+                                            style={{
+                                                display: 'flex',
                                                 justifyContent: 'space-between',
                                                 alignItems: 'center',
                                                 gap: '10px',
-                                                padding: '10px 12px',
                                             }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
@@ -281,6 +289,23 @@ export default async function ConfiguracionPage() {
                                                     desde {formatDate(u.createdAt)}
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                                            <span
+                                                style={{
+                                                    fontFamily: 'var(--font-body)',
+                                                    fontSize: '10px',
+                                                    fontWeight: 700,
+                                                    padding: '2px 8px',
+                                                    borderRadius: '999px',
+                                                    background: u.emailVerified ? 'var(--admin-success-bg)' : 'var(--admin-icon-red-bg)',
+                                                    color: u.emailVerified ? 'var(--admin-success-fg)' : 'var(--admin-icon-red-fg)',
+                                                }}
+                                            >
+                                                {u.emailVerified ? 'Correo verificado' : 'Correo pendiente'}
+                                            </span>
+                                            {!u.emailVerified && <ReenviarVerificacionButton userId={u.id} />}
+                                        </div>
                                         </div>
                                     )
                                 })}

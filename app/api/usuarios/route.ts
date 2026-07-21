@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import { generarTokenVerificacion, enviarCorreoVerificacion } from '@/lib/verification'
 
 // Lista de usuarios internos (para asignar responsables, gestionar cuentas, etc).
 // Solo Admin puede ver el listado completo.
@@ -14,7 +15,7 @@ export async function GET() {
     }
 
     const usuarios = await prisma.user.findMany({
-        select: { id: true, name: true, email: true, role: true, createdAt: true },
+        select: { id: true, name: true, email: true, role: true, emailVerified: true, createdAt: true },
         orderBy: { name: 'asc' },
     })
 
@@ -70,7 +71,27 @@ export async function POST(req: Request) {
             },
         })
 
-        return NextResponse.json(nuevo, { status: 201 })
+        // El envío del correo de verificación nunca debe tumbar la creación
+        // de la cuenta: si Resend falla, la cuenta ya quedó creada y un
+        // Admin puede reenviar el correo después desde Configuración.
+        let correoEnviado = true
+        try {
+            const rawToken = await generarTokenVerificacion(nuevo.id)
+            await enviarCorreoVerificacion(nuevo, rawToken)
+            await prisma.auditLog.create({
+                data: {
+                    userId: session.user.id,
+                    action: 'verification_email_sent',
+                    targetType: 'User',
+                    targetId: nuevo.id,
+                },
+            })
+        } catch (err) {
+            console.error('Error al enviar correo de verificación:', err)
+            correoEnviado = false
+        }
+
+        return NextResponse.json({ ...nuevo, correoVerificacionEnviado: correoEnviado }, { status: 201 })
     } catch (error) {
         console.error(error)
         return NextResponse.json({ error: 'Error al crear el usuario' }, { status: 500 })

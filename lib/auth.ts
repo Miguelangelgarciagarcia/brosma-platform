@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
@@ -7,6 +7,15 @@ import { checkRateLimit, loginRateLimiter } from '@/lib/ratelimit'
 
 const MAX_INTENTOS = 5
 const BLOQUEO_MINUTOS = 15
+
+// Subclase con `code` propio: next-auth/react la expone como `res.code` en
+// el cliente (con redirect:false), así la pantalla de login puede mostrar
+// un mensaje específico para este caso sin tocar el resto de los mensajes
+// genéricos (que a propósito no distinguen "no existe" de "password
+// incorrecto", para no filtrar qué correos están registrados).
+class EmailNoVerificadoError extends CredentialsSignin {
+    code = 'email_no_verificado'
+}
 
 // Toda entrada de usuario se valida en el servidor con Zod, nunca se confía
 // solo en la validación del formulario del cliente.
@@ -95,6 +104,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         bloqueado: bloquear,
                     })
                     return null
+                }
+
+                // Password correcto pero todavía no confirma su correo: no
+                // se cuenta como intento fallido (la contraseña sí era
+                // correcta), solo se corta aquí antes de abrir sesión.
+                if (!user.emailVerified) {
+                    await registrarAuditoria(user.id, 'login_failed', { reason: 'email_no_verificado' })
+                    throw new EmailNoVerificadoError()
                 }
 
                 // Login exitoso: resetear contador de intentos

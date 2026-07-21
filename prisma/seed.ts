@@ -12,8 +12,11 @@ async function crearUsuario(email: string, password: string, name: string, role:
 
     const hash = await bcrypt.hash(password, 12)
 
+    // Cuentas de seed (admin/trabajador de arranque): se marcan verificadas
+    // de una vez, porque no hay forma de que reciban ni den clic a un
+    // correo de verificación en este flujo.
     await prisma.user.create({
-        data: { name, email, password: hash, role },
+        data: { name, email, password: hash, role, emailVerified: new Date() },
     })
 
     console.log(`Usuario ${role} creado: ${email} / ${password}`)
