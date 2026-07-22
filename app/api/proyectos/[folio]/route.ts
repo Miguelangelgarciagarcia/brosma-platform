@@ -210,3 +210,51 @@ export async function PATCH(
         return NextResponse.json({ error: 'Error al editar el proyecto' }, { status: 500 })
     }
 }
+
+// Elimina un proyecto por completo (borrador o ya registrado): sus fases
+// (a cualquier profundidad) y su historial de estatus se van con él por el
+// onDelete: Cascade ya definido en el schema (Phase.project, StatusHistory.
+// project). Es una acción destructiva e irreversible, por eso: solo Admin,
+// y el cliente (EliminarProyectoButton) exige una confirmación explícita
+// antes de llamar aquí. El AuditLog SÍ sobrevive al proyecto a propósito
+// (targetId es un campo suelto, no una FK real) para que quede registro de
+// quién borró qué, aunque el proyecto ya no exista.
+export async function DELETE(
+    _req: Request,
+    { params }: { params: Promise<{ folio: string }> }
+) {
+    try {
+        const session = await auth()
+        if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        if (session.user?.role !== 'admin') {
+            return NextResponse.json({ error: 'Solo un Administrador puede eliminar proyectos' }, { status: 403 })
+        }
+
+        const { folio } = await params
+
+        const existente = await prisma.project.findUnique({ where: { folio } })
+        if (!existente) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+
+        await prisma.project.delete({ where: { id: existente.id } })
+
+        await prisma.auditLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'project_deleted',
+                targetType: 'Project',
+                targetId: existente.id,
+                metadata: {
+                    folio: existente.folio,
+                    title: existente.title,
+                    clientName: existente.clientName,
+                    recordStatus: existente.recordStatus,
+                },
+            },
+        })
+
+        return NextResponse.json({ ok: true })
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: 'Error al eliminar el proyecto' }, { status: 500 })
+    }
+}

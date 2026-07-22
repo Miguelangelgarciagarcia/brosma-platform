@@ -20,6 +20,11 @@ model User {
 
   role String @default("trabajador") // "admin" | "trabajador"
 
+  // null = todavía no confirma su correo (no puede iniciar sesión).
+  // Con fecha = cuándo confirmó, dando clic en el link que le llegó al
+  // crearse la cuenta (ver VerificationToken abajo).
+  emailVerified DateTime?
+
   // Endurecimiento contra fuerza bruta en login
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
@@ -27,12 +32,35 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  proyectosCreados Project[]      @relation("ProyectosCreadosPor")
-  fasesResponsable Phase[]        @relation("FaseResponsable")
-  historialCambios StatusHistory[] @relation("HistorialCambiadoPor")
-  auditLogs        AuditLog[]
+  proyectosCreados    Project[]           @relation("ProyectosCreadosPor")
+  fasesResponsable    Phase[]             @relation("FaseResponsable")
+  historialCambios    StatusHistory[]     @relation("HistorialCambiadoPor")
+  auditLogs           AuditLog[]
+  verificationTokens  VerificationToken[]
 
   @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Token de verificación de correo, enviado al crear una cuenta nueva (y al
+// reenviarlo desde Configuración). Se guarda el hash (sha256), nunca el
+// token en crudo — igual que la contraseña: si alguien ve la base de datos,
+// no puede armar un link de verificación válido con eso. Un usuario puede
+// tener varios tokens vigentes a la vez (ej. si se reenvía antes de que
+// expire el anterior); cualquiera de los dos vigentes sirve.
+// ---------------------------------------------------------------------------
+model VerificationToken {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("verification_tokens")
 }
 
 // ---------------------------------------------------------------------------

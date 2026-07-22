@@ -45,7 +45,11 @@ export default function LoginPage() {
         })
 
         if (res?.error) {
-            setError('Correo o contraseña incorrectos.')
+            setError(
+                res.code === 'email_no_verificado'
+                    ? 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).'
+                    : 'Correo o contraseña incorrectos.'
+            )
             setLoading(false)
             return
         }
